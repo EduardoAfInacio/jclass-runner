@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "leitor.h": "c",
+        "string.h": "c",
+        "decodificador.h": "c"
+    }
+}
