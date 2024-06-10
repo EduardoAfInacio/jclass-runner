@@ -68,8 +68,8 @@ void general_info(ClassFile* classfile, FILE* file) {
 
 void constant_pool(ClassFile* classfile, FILE* file) {
   classfile->constant_pool =
-      (cp_info*)malloc((classfile->constant_pool_count - 1) * sizeof(cp_info));
-  cp_info* cp;
+      (ConstantPool*)malloc((classfile->constant_pool_count - 1) * sizeof(ConstantPool));
+  ConstantPool* cp;
 
   int i = 0;
   for (cp = classfile->constant_pool; i < (classfile->constant_pool_count - 1); cp++) {
@@ -145,7 +145,7 @@ void fieldInfo(ClassFile* classfile, FILE* file, uint16_t fields_count) {
   if (fields_count == 0)
     return;
   else {
-    classfile->fields = (field_info*)malloc(fields_count * sizeof(field_info));
+    classfile->fields = (Field*)malloc(fields_count * sizeof(Field));
 
     for (int i = 0; i < fields_count; i++) {
       classfile->fields[i].access_flags = read_two_bytes(file);
@@ -155,13 +155,13 @@ void fieldInfo(ClassFile* classfile, FILE* file, uint16_t fields_count) {
       classfile->fields[i].attributes_count = read_two_bytes(file);
 
       classfile->fields[i].attributes =
-          (CV_info*)malloc(classfile->fields[i].attributes_count * sizeof(CV_info));
+          (ConstantValue*)malloc(classfile->fields[i].attributes_count * sizeof(ConstantValue));
 
       for (int j = 0; j < classfile->fields[i].attributes_count; j++) {
-        classfile->fields[i].attributes->attribute_name_index = read_two_bytes(file);
-        classfile->fields[i].attributes->attribute_length = read_four_bytes(file);
+        classfile->fields[i].attributes->name_index = read_two_bytes(file);
+        classfile->fields[i].attributes->length = read_four_bytes(file);
 
-        classfile->fields[i].attributes->constantvalue_index = read_two_bytes(file);
+        classfile->fields[i].attributes->index = read_two_bytes(file);
       }
     }
   }
@@ -174,8 +174,8 @@ void methodInfo(ClassFile* classfile, FILE* file, uint16_t methods_count) {
   if (methods_count == 0)
     return;
   else {
-    classfile->methods = (method_info*)malloc(methods_count * sizeof(method_info));
-    method_info* cp = classfile->methods;
+    classfile->methods = (Method*)malloc(methods_count * sizeof(Method));
+    Method* cp = classfile->methods;
     for (int i = 0; i < methods_count; cp++) {
       cp->access_flags = read_two_bytes(file);
 
@@ -209,17 +209,17 @@ void methodInfo(ClassFile* classfile, FILE* file, uint16_t methods_count) {
 
         if (strcmp((char*)classfile->constant_pool[name_ind - 1].info.Utf8.bytes,
                    "Code") == 0) {
-          cp->cd_atrb = (code_attribute*)malloc(sizeof(code_attribute));
+          cp->code_attribute = (CodeAttribute*)malloc(sizeof(CodeAttribute));
 
-          read_code(&(cp->cd_atrb), name_ind, att_len, file);
+          read_code(&(cp->code_attribute), name_ind, att_len, file);
         }
 
         else if (strcmp((char*)classfile->constant_pool[name_ind - 1].info.Utf8.bytes,
                         "Exceptions") == 0) {
-          cp->exc_atrb =
-              (exceptions_attribute*)malloc(sizeof(exceptions_attribute));
+          cp->exception_attribute =
+              (ExceptionAttribute*)malloc(sizeof(ExceptionAttribute));
 
-          read_exc(&(cp->exc_atrb), name_ind, att_len, file);
+          read_exc(&(cp->exception_attribute), name_ind, att_len, file);
         }
       }
       i++;
@@ -227,27 +227,27 @@ void methodInfo(ClassFile* classfile, FILE* file, uint16_t methods_count) {
   }
 }
 
-void read_exc(exceptions_attribute** exc_atrb, uint16_t name_ind,
+void read_exc(ExceptionAttribute** exc_atrb, uint16_t name_ind,
               uint32_t att_len, FILE* file) {
-  (*exc_atrb)->attribute_name_index = name_ind;
-  (*exc_atrb)->attribute_length = att_len;
+  (*exc_atrb)->name_index = name_ind;
+  (*exc_atrb)->length = att_len;
 
   (*exc_atrb)->number_of_exceptions = read_two_bytes(file);
 
   (*exc_atrb)->exception_index_table = (uint16_t*)malloc(
-      (*exc_atrb)->number_of_exceptions * sizeof(exception_table));
+      (*exc_atrb)->number_of_exceptions * sizeof(ExceptionTable));
 
   for (int k = 0; k < (*exc_atrb)->number_of_exceptions; k++) {
     (*exc_atrb)->exception_index_table[k] = read_two_bytes(file);
   }
 }
 
-void read_code(code_attribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
+void read_code(CodeAttribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
                FILE* file) {
   int posicao_inicial = ftell(file);
 
-  (*cd_atrb)->attribute_name_index = name_ind;
-  (*cd_atrb)->attribute_length = att_len;
+  (*cd_atrb)->name_index = name_ind;
+  (*cd_atrb)->length = att_len;
 
   (*cd_atrb)->max_stack = read_two_bytes(file);
   (*cd_atrb)->max_locals = read_two_bytes(file);
@@ -257,8 +257,8 @@ void read_code(code_attribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
 
   (*cd_atrb)->exception_table_length = read_two_bytes(file);
 
-  (*cd_atrb)->exception_table = (exception_table*)malloc(
-      (*cd_atrb)->exception_table_length * sizeof(exception_table));
+  (*cd_atrb)->exception_table = (ExceptionTable*)malloc(
+      (*cd_atrb)->exception_table_length * sizeof(ExceptionTable));
 
   for (int k = 0; k < (*cd_atrb)->exception_table_length; k++) {
     (*cd_atrb)->exception_table[k].start_pc = read_two_bytes(file);
@@ -268,17 +268,17 @@ void read_code(code_attribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
 
   (*cd_atrb)->attributes_count = read_two_bytes(file);
 
-  (*cd_atrb)->attributes = (attribute_info*)malloc(
-      (*cd_atrb)->attributes_count * sizeof(attribute_info));
+  (*cd_atrb)->attributes = (Attribute*)malloc(
+      (*cd_atrb)->attributes_count * sizeof(Attribute));
 
   while (ftell(file) - posicao_inicial <
-         (int32_t)((*cd_atrb)->attribute_length)) {
+         (int32_t)((*cd_atrb)->length)) {
     read_one_byte(file);
   }
 }
 
 
-void save_instructions(code_attribute** cd_atrb, FILE* file) {
+void save_instructions(CodeAttribute** cd_atrb, FILE* file) {
   int opcode, pos_referencia;
   int bytes_preench, offsets;
   uint32_t default_v, low, high, npairs;
@@ -425,14 +425,14 @@ void attributeInfo(ClassFile* classfile, FILE* file, uint16_t attributes_count) 
     return;
   else {
     classfile->attributes =
-        (attribute_info*)malloc(attributes_count * sizeof(attribute_info));
-    attribute_info* cp = classfile->attributes;
+        (Attribute*)malloc(attributes_count * sizeof(Attribute));
+    Attribute* cp = classfile->attributes;
 
     for (int i = 0; i < attributes_count; cp++) {
-      cp->attribute_name_index = read_two_bytes(file);
-      cp->attribute_length = read_four_bytes(file);
-      cp->info = (uint8_t*)malloc((cp->attribute_length) * sizeof(uint8_t));
-      for (uint32_t j = 0; j < cp->attribute_length; j++) {
+      cp->name_index = read_two_bytes(file);
+      cp->length = read_four_bytes(file);
+      cp->info = (uint8_t*)malloc((cp->length) * sizeof(uint8_t));
+      for (uint32_t j = 0; j < cp->length; j++) {
         fread(&cp->info[j], 1, 1, file);
       }
       i++;

@@ -210,12 +210,12 @@ void print_prompt(ClassFile* cf) {
         printf("\t\t----Attribute Info do Field----\n");
 
         printf("attribute_name_index: cp info #%d\n",
-               cf->fields[i].attributes->attribute_name_index);
+               cf->fields[i].attributes->name_index);
         printf("attribute_length: %d\n",
-               cf->fields[i].attributes->attribute_length);
+               cf->fields[i].attributes->length);
 
         printf("constant_value_index: cp info #%d",
-               cf->fields[i].attributes->constantvalue_index);
+               cf->fields[i].attributes->index);
         print_string_pool(cf->constant_pool,
                           cf->fields[i].descriptor_index - 1);
         printf("\n");
@@ -231,14 +231,15 @@ void print_prompt(ClassFile* cf) {
 
   printf("attributes_count: %d\n", cf->attributes_count);
   if (cf->attributes_count != 0) {
-    attribute_info* cp = cf->attributes;
+    Attribute* cp = cf->attributes;
+
     for (uint16_t i = 0; i < cf->attributes_count; cp++) {
       printf("----Attributes Info----\n");
-      printf("attribute_name_index: cp info #%d ", cp->attribute_name_index);
-      print_string_pool(cf->constant_pool, cp->attribute_name_index - 1);
+      printf("attribute_name_index: cp info #%d ", cp->name_index);
+      print_string_pool(cf->constant_pool, cp->name_index - 1);
       printf("\n");
-      printf("attribute_length: %d\n", cp->attribute_length);
-      for (uint32_t j = 0; j < cp->attribute_length; cp->info++) {
+      printf("attribute_length: %d\n", cp->length);
+      for (uint32_t j = 0; j < cp->length; cp->info++) {
         if (*(cp->info) != 0) {
           printf("Source file name index: cp info #%d ", *(cp->info));
           print_string_pool(cf->constant_pool, *(cp->info) - 1);
@@ -275,7 +276,7 @@ void print_methods(ClassFile* cf) {
   if (methods_count == 0)
     return;
   else {
-    method_info* cp = cf->methods;
+    Method* cp = cf->methods;
     for (int i = 0; i < methods_count; cp++, i++) {
       printf("\n----Method %d----\n", i);
       printf("access_flag: 0x%0x ", cp->access_flags);
@@ -288,10 +289,10 @@ void print_methods(ClassFile* cf) {
       printf("\n");
       printf("attributes_count: %d\n", cp->attributes_count);
 
-      print_code(cf, cp->cd_atrb);
+      print_code(cf, cp->code_attribute);
 
       if (cp->attributes_count == 2) {
-        print_exc(cf, cp->exc_atrb);
+        print_exc(cf, cp->exception_attribute);
       }
 
       printf("----End Method %d----\n", i);
@@ -300,7 +301,7 @@ void print_methods(ClassFile* cf) {
   }
 }
 
-void print_code(ClassFile* cf, code_attribute* cd_atrb) {
+void print_code(ClassFile* cf, CodeAttribute* cd_atrb) {
   int opcode, pos_referencia;
   int bytes_preench, offsets;
   uint32_t default_v, low, high, npairs, temp;
@@ -310,10 +311,10 @@ void print_code(ClassFile* cf, code_attribute* cd_atrb) {
   }
 
   printf("\n----Code Info----\n");
-  printf("attribute_name_index: cp info #%d ", cd_atrb->attribute_name_index);
-  print_string_pool(cf->constant_pool, cd_atrb->attribute_name_index - 1);
+  printf("attribute_name_index: cp info #%d ", cd_atrb->name_index);
+  print_string_pool(cf->constant_pool, cd_atrb->name_index - 1);
   printf("\n");
-  printf("attribute_length: %d\n", cd_atrb->attribute_length);
+  printf("attribute_length: %d\n", cd_atrb->length);
 
   printf("Stack max size: %d\n", cd_atrb->max_stack);
   printf("Local variable max: %d\n", cd_atrb->max_locals);
@@ -471,10 +472,10 @@ void print_code(ClassFile* cf, code_attribute* cd_atrb) {
   }
 }
 
-void print_exc(ClassFile* cf, exceptions_attribute* exc_atrb) {
+void print_exc(ClassFile* cf, ExceptionAttribute* exc_atrb) {
   printf("\n----Exception Info----\n");
-  printf("attribute_name_index: cp info #%d ", exc_atrb->attribute_name_index);
-  print_string_pool(cf->constant_pool, exc_atrb->attribute_name_index - 1);
+  printf("attribute_name_index: cp info #%d ", exc_atrb->name_index);
+  print_string_pool(cf->constant_pool, exc_atrb->name_index - 1);
   printf("\n");
   printf("# - Excecao\n");
   for (int k = 0; k < exc_atrb->number_of_exceptions; k++) {
@@ -482,7 +483,7 @@ void print_exc(ClassFile* cf, exceptions_attribute* exc_atrb) {
   }
 }
 
-void print_string_pool(cp_info* cp, int pos_pool) {
+void print_string_pool(ConstantPool* cp, int pos_pool) {
   int tag;
 
   tag = cp[pos_pool].tag;

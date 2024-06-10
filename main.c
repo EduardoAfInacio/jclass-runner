@@ -13,5 +13,7 @@ int main(int argc, char *args[]) {
 
   carrega_object();
 
+  print_prompt(classes.content[0]);
+
   return 0;
 }
