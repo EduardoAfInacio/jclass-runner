@@ -26,7 +26,7 @@ void inicializa_pilha_frames();
 void add_frame(ClassFile* classe, uint16_t method_index);
 Frame* get_frame_atual();
 void executa_frame_atual();
-void push(int32_t valor);
+void push_pilha_operandos(int32_t valor);
 void atualiza_pc();
 
 #endif

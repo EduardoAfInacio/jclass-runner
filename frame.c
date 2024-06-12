@@ -45,7 +45,7 @@ void executa_frame_atual()
     Frame* frame_atual = get_frame_atual();
 }
 
-void push(int32_t valor)
+void push_pilha_operandos(int32_t valor)
 {
     Frame* frame_atual = get_frame_atual();
 
@@ -55,6 +55,7 @@ void push(int32_t valor)
 	}
 
     frame_atual->operandos = realloc(frame_atual->operandos, sizeof(int32_t) * (frame_atual->operandos_length + 1));
+    frame_atual->operandos[frame_atual->operandos_length] = valor;
     frame_atual->operandos_length++;
 }
 

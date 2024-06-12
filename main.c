@@ -4,6 +4,7 @@
 #include "includes/leitor.h"
 #include "includes/carregador.h"
 #include "includes/frame.h"
+#include "includes/instrucao.h"
 
 int main(int argc, char *args[]) {
   

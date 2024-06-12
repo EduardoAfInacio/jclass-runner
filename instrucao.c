@@ -633,7 +633,7 @@ void nop(){
 void aconst_null(){
     Frame* frame_atual = get_frame_atual();
 
-    push(0);
+    push_pilha_operandos(0);
 
 	atualiza_pc();
 }
@@ -641,7 +641,7 @@ void aconst_null(){
 void iconst_m1(){
     Frame* frame_atual = get_frame_atual();
 
-    push(-1);
+    push_pilha_operandos(-1);
 
     atualiza_pc();
 }
@@ -649,7 +649,7 @@ void iconst_m1(){
 void iconst_0(){
     Frame* frame_atual = get_frame_atual();
 
-	push((int32_t) 0);
+	push_pilha_operandos((int32_t) 0);
 
 	atualiza_pc();
 }
@@ -657,7 +657,7 @@ void iconst_0(){
 void iconst_1(){
     Frame* frame_atual = get_frame_atual();
 
-    push(1);
+    push_pilha_operandos(1);
 
     atualiza_pc();
 }
@@ -665,7 +665,7 @@ void iconst_1(){
 void iconst_2(){
     Frame* frame_atual = get_frame_atual();
 
-    push(2);
+    push_pilha_operandos(2);
 
     atualiza_pc();
 }
@@ -673,7 +673,7 @@ void iconst_2(){
 void iconst_3(){
     Frame* frame_atual = get_frame_atual();
 
-    push(3);
+    push_pilha_operandos(3);
 
     atualiza_pc();
 }
@@ -681,7 +681,7 @@ void iconst_3(){
 void iconst_4(){
     Frame* frame_atual = get_frame_atual();
 
-    push(4);
+    push_pilha_operandos(4);
 
     atualiza_pc();
 }
@@ -689,43 +689,24 @@ void iconst_4(){
 void iconst_5(){
     Frame* frame_atual = get_frame_atual();
 
-    push(5);
+    push_pilha_operandos(5);
 
     atualiza_pc();
 }
 
 void lconst_0(){
-    int64_t long0 = 0; 
-    int32_t parte_alta;
-    int32_t parte_baixa; 
-
-	parte_alta = long0 >> 32;
-	parte_baixa = long0 & 0xffffffff;
-
-    push(parte_alta);
-
-    push(parte_baixa);
+    push_pilha_operandos(0);
+    push_pilha_operandos(0);
 
     atualiza_pc();
 }
 
-// void lconst_1(){
-//     char* tipo = "L";
-//     tipoGlobal = tipo;
+void lconst_1(){
+    push_pilha_operandos(0);
+    push_pilha_operandos(1);
 
-//     int64_t long1 = 1; 
-//     int32_t parte_alta;
-//     int32_t parte_baixa; 
-
-// 	parte_alta = long1 >> 32;
-// 	parte_baixa = long1 & 0xffffffff;
-
-//     push(parte_alta);
-
-//     push(parte_baixa);
-
-//     get_frame_atual()->pc++;
-// }
+    get_frame_atual()->pc++;
+}
 
 // void fconst_0(){
 //     char* tipo = "F";
@@ -739,7 +720,7 @@ void lconst_0(){
 
 // 	memcpy(valPilha, &valF, sizeof(int32_t));
 
-// 	push(*valPilha);
+// 	push_pilha_operandos(*valPilha);
 
 // 	atualizaPc();
 // }
@@ -756,7 +737,7 @@ void lconst_0(){
 
 // 	memcpy(valPilha, &valF, sizeof(int32_t));
 
-// 	push(*valPilha);
+// 	push_pilha_operandos(*valPilha);
 
 // 	atualizaPc();
 // }
@@ -773,7 +754,7 @@ void lconst_0(){
 
 // 	memcpy(valPilha, &valF, sizeof(int32_t));
 
-// 	push(*valPilha);
+// 	push_pilha_operandos(*valPilha);
 
 // 	atualizaPc();
 // }
@@ -792,8 +773,8 @@ void lconst_0(){
 // 	parte_alta = temp >> 32;
 // 	parte_baixa = temp & 0xffffffff;
 
-//     push(parte_alta);
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_alta);
+//     push_pilha_operandos(parte_baixa);
 
 //     get_frame_atual()->pc++;
 // }
@@ -812,21 +793,21 @@ void lconst_0(){
 // 	parte_alta = temp >> 32;
 // 	parte_baixa = temp & 0xffffffff;
 
-//     push(parte_alta);
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_alta);
+//     push_pilha_operandos(parte_baixa);
 
 //     get_frame_atual()->pc++;
 // }
 
-// void bipush(){
+// void bipush_pilha_operandos(){
 // 	int8_t argumento = (int8_t) get_frame_atual()->code[get_frame_atual()->pc + 1];
 
-// 	push((int32_t)argumento);
+// 	push_pilha_operandos((int32_t)argumento);
 
 // 	atualizaPc();
 // }
 
-// void sipush(){
+// void sipush_pilha_operandos(){
 //     int32_t byte1, byte2;
 //     int32_t valor; 
 //     int16_t short_temp;
@@ -838,7 +819,7 @@ void lconst_0(){
 //     short_temp = (byte1 << 8) + byte2;
 //     valor = (int32_t) short_temp;
 
-//     push(valor);
+//     push_pilha_operandos(valor);
 //     atualizaPc();
 // }
 
@@ -854,11 +835,11 @@ void lconst_0(){
 
 //         if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Float)
 //         {
-//             push(get_frame_atual()->constant_pool[indice - 1].info.Float.bytes);
+//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Float.bytes);
 //         }
 //         else
 //         {
-//             push(get_frame_atual()->constant_pool[indice - 1].info.Integer.bytes);
+//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Integer.bytes);
 //         }
 //     }
 
@@ -866,7 +847,7 @@ void lconst_0(){
 //     {
 //         uint32_t indice_utf;
 //         indice_utf = obtem_utf_eq(get_frame_atual()->constant_pool, indice-1); 
-//         push(indice_utf);
+//         push_pilha_operandos(indice_utf);
 //     }
 
 //     else if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_String) 
@@ -899,11 +880,11 @@ void lconst_0(){
 
 //         if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Float)
 //         {
-//             push(get_frame_atual()->constant_pool[indice - 1].info.Float.bytes);
+//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Float.bytes);
 //         }
 //         else
 //         {
-//             push(get_frame_atual()->constant_pool[indice - 1].info.Integer.bytes);
+//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Integer.bytes);
 //         }
 //     }
 
@@ -911,7 +892,7 @@ void lconst_0(){
 //     {
 //         uint32_t indice_utf;
 //         indice_utf = obtem_utf_eq(get_frame_atual()->constant_pool, indice-1); 
-//         push(indice_utf);
+//         push_pilha_operandos(indice_utf);
 //     }
 
 //     else if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_String) 
@@ -939,15 +920,15 @@ void lconst_0(){
 // 	if(tag == 5){
 // 		uint32_t alta = get_frame_atual()->constant_pool[indice-1].info.Long.high_bytes;
 // 		uint32_t baixa = get_frame_atual()->constant_pool[indice-1].info.Long.low_bytes;
-// 		push(alta);
-// 		push(baixa);
+// 		push_pilha_operandos(alta);
+// 		push_pilha_operandos(baixa);
 // 	}
 
 // 	if(tag == 6){
 // 		uint32_t alta = get_frame_atual()->constant_pool[indice-1].info.Double.high_bytes;
 // 		uint32_t baixa = get_frame_atual()->constant_pool[indice-1].info.Double.low_bytes;
-// 		push(alta);
-// 		push(baixa);
+// 		push_pilha_operandos(alta);
+// 		push_pilha_operandos(baixa);
 // 	}
 
 // 	atualizaPc();
@@ -962,7 +943,7 @@ void lconst_0(){
 
 // 	int32_t argumento = (int32_t) get_frame_atual()->code[get_frame_atual()->pc + 1];
 // 	int32_t aux = get_frame_atual()->fields[argumento];
-// 	push(aux);
+// 	push_pilha_operandos(aux);
 
 // 	atualizaPc();
 
@@ -978,10 +959,10 @@ void lconst_0(){
 //     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -997,7 +978,7 @@ void lconst_0(){
 //     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 // }
@@ -1012,10 +993,10 @@ void lconst_0(){
 //     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 // }
@@ -1027,7 +1008,7 @@ void lconst_0(){
 //     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 
@@ -1042,7 +1023,7 @@ void lconst_0(){
 
 //     valor = get_frame_atual()->fields[0];
 
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 // 	atualizaPc();
 // }
@@ -1055,7 +1036,7 @@ void lconst_0(){
 
 //     valor = get_frame_atual()->fields[1];
 
-//     push(valor);
+//     push_pilha_operandos(valor);
 //     atualizaPc();
 // }
 
@@ -1068,7 +1049,7 @@ void lconst_0(){
 
 //     valor = get_frame_atual()->fields[2];
 
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 // }
@@ -1081,7 +1062,7 @@ void lconst_0(){
 
 //     valor = get_frame_atual()->fields[3];
 
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 
@@ -1098,10 +1079,10 @@ void lconst_0(){
 //     indice = 0;
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 // 	atualizaPc();
 
@@ -1117,10 +1098,10 @@ void lconst_0(){
 //     indice = 1;
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1137,10 +1118,10 @@ void lconst_0(){
 //     indice = 2;
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1157,10 +1138,10 @@ void lconst_0(){
 //     indice = 3;
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1176,7 +1157,7 @@ void lconst_0(){
 //     indice = 0; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //    atualizaPc();
 
@@ -1192,7 +1173,7 @@ void lconst_0(){
 //     indice = 1; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 
@@ -1208,7 +1189,7 @@ void lconst_0(){
 //     indice = 2; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 
@@ -1224,7 +1205,7 @@ void lconst_0(){
 //     indice = 3; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 
@@ -1241,10 +1222,10 @@ void lconst_0(){
 //     indice = 0; 
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1260,10 +1241,10 @@ void lconst_0(){
 //     indice = 1; 
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1278,10 +1259,10 @@ void lconst_0(){
 //     indice = 2; 
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1297,10 +1278,10 @@ void lconst_0(){
 //     indice = 3; 
 
 //     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push(parte_alta);
+//     push_pilha_operandos(parte_alta);
 
 //     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push(parte_baixa);
+//     push_pilha_operandos(parte_baixa);
 
 //     atualizaPc();
 
@@ -1308,7 +1289,7 @@ void lconst_0(){
 
 // void aload_0(){
 
-// 	push(get_frame_atual()->fields[0]);
+// 	push_pilha_operandos(get_frame_atual()->fields[0]);
 // 	atualizaPc();
 // }
 
@@ -1318,7 +1299,7 @@ void lconst_0(){
 //     indice = 1; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 //     atualizaPc();
 // }
 
@@ -1328,7 +1309,7 @@ void lconst_0(){
 //     indice = 2; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //    atualizaPc();
 // }
@@ -1339,7 +1320,7 @@ void lconst_0(){
 //     indice = 3; 
 
 //     valor = get_frame_atual()->fields[indice];
-//     push(valor);
+//     push_pilha_operandos(valor);
 
 //     atualizaPc();
 
@@ -1353,7 +1334,7 @@ void lconst_0(){
 
 // 	referencia = (int32_t*)pop_op();
 
-// 	push(referencia[indice]);
+// 	push_pilha_operandos(referencia[indice]);
 
 // 	atualizaPc();
 // }
@@ -1368,8 +1349,8 @@ void lconst_0(){
 // 	int32_t* referencia;
 // 	referencia = (int32_t*)pop_op();
 
-// 	push(referencia[countPos + indice+1]);
-// 	push(referencia[countPos + indice]);
+// 	push_pilha_operandos(referencia[countPos + indice+1]);
+// 	push_pilha_operandos(referencia[countPos + indice]);
 // 	countPos += 2;
 // 	atualizaPc();
 // }
@@ -1386,7 +1367,7 @@ void lconst_0(){
 
 // 	int32_t valPilha;
 // 	memcpy(&valPilha, &((float *)referencia)[indice], sizeof(int32_t));
-// 	push(valPilha);
+// 	push_pilha_operandos(valPilha);
 
 // 	atualizaPc();
 // }
@@ -1401,8 +1382,8 @@ void lconst_0(){
 // 	int32_t* referencia;
 // 	referencia = (int32_t*)pop_op();
 
-// 	push(referencia[countPos + indice+1]);
-// 	push(referencia[countPos + indice]);
+// 	push_pilha_operandos(referencia[countPos + indice+1]);
+// 	push_pilha_operandos(referencia[countPos + indice]);
 // 	countPos += 2;
 // 	atualizaPc();
 // }
@@ -1415,7 +1396,7 @@ void lconst_0(){
 
 // 	referencia = (int32_t*)pop_op();
 
-// 	push(referencia[indice]);
+// 	push_pilha_operandos(referencia[indice]);
 
 // 	atualizaPc();
 // }
@@ -1429,7 +1410,7 @@ void lconst_0(){
 // 	referencia = (int32_t*)pop_op();
 // 	int8_t* binary = (int8_t*)referencia[indice];
 
-// 	push((int32_t)binary);
+// 	push_pilha_operandos((int32_t)binary);
 
 // 	atualizaPc();
 // }
@@ -1445,7 +1426,7 @@ void lconst_0(){
 // 	referencia = (int32_t*)pop_op();
 // 	int16_t* binary = (int16_t*)referencia[indice];
 
-// 	push((int32_t)binary);
+// 	push_pilha_operandos((int32_t)binary);
 
 // 	atualizaPc();
 // }
@@ -1459,7 +1440,7 @@ void lconst_0(){
 // 	referencia = (int32_t*)pop_op();
 // 	int16_t* binary = (int16_t*)referencia[indice];
 
-// 	push((int32_t)binary);
+// 	push_pilha_operandos((int32_t)binary);
 
 // 	atualizaPc();
 // }
@@ -1985,8 +1966,8 @@ void lconst_0(){
 
 // 	retPilha = pop_op();
 
-// 	push(retPilha);
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
+// 	push_pilha_operandos(retPilha);
 // 	atualizaPc();
 // }
 
@@ -1997,11 +1978,11 @@ void lconst_0(){
 
 // 	aux2 = pop_op();
 
-// 	push(aux1);
+// 	push_pilha_operandos(aux1);
 
-// 	push(aux2);
+// 	push_pilha_operandos(aux2);
 
-// 	push(aux1);
+// 	push_pilha_operandos(aux1);
 
 // 	atualizaPc();
 // }
@@ -2016,10 +1997,10 @@ void lconst_0(){
 
 // 	aux3 = pop_op();
 
-// 	push(aux1);
-// 	push(aux3);
-// 	push(aux2);
-// 	push(aux1);
+// 	push_pilha_operandos(aux1);
+// 	push_pilha_operandos(aux3);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
 
 // 	atualizaPc();
 
@@ -2033,10 +2014,10 @@ void lconst_0(){
 
 // 	aux2 = pop_op();
 
-// 	push(aux2);
-// 	push(aux1);
-// 	push(aux2);
-// 	push(aux1);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
 
 // 	atualizaPc();
 // }
@@ -2051,11 +2032,11 @@ void lconst_0(){
 
 // 	aux3 = pop_op();
 
-// 	push(aux2);
-// 	push(aux1);
-// 	push(aux3);
-// 	push(aux2);
-// 	push(aux1);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
+// 	push_pilha_operandos(aux3);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
 
 // 	atualizaPc();
 
@@ -2073,12 +2054,12 @@ void lconst_0(){
 
 // 	aux4 = pop_op();
 
-// 	push(aux2);
-// 	push(aux1);
-// 	push(aux4);
-// 	push(aux3);
-// 	push(aux2);
-// 	push(aux1);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
+// 	push_pilha_operandos(aux4);
+// 	push_pilha_operandos(aux3);
+// 	push_pilha_operandos(aux2);
+// 	push_pilha_operandos(aux1);
 
 // 	atualizaPc();
 // }
@@ -2089,8 +2070,8 @@ void lconst_0(){
 // 	val1 = pop_op();
 // 	val2 = pop_op();
 
-// 	push(val1);
-// 	push(val2);
+// 	push_pilha_operandos(val1);
+// 	push_pilha_operandos(val2);
 
 // 	atualizaPc();
 // }
@@ -2100,7 +2081,7 @@ void lconst_0(){
 // 	v2 = pop_op();
 // 	v1 = pop_op();
 
-// 	push(v1+v2);
+// 	push_pilha_operandos(v1+v2);
 
 // 	atualizaPc();
 // }
@@ -2131,8 +2112,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2151,7 +2132,7 @@ void lconst_0(){
 // 	int32_t retPilha;
 // 	memcpy(&retPilha, &resultado, sizeof(int32_t));
 
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
 
 // 	atualizaPc();
 
@@ -2194,8 +2175,8 @@ void lconst_0(){
 // 	alta = valorPilha >> 32;
 // 	baixa = valorPilha & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2205,7 +2186,7 @@ void lconst_0(){
 // 	v2 = pop_op();
 // 	v1 = pop_op();
 
-// 	push(v1-v2);
+// 	push_pilha_operandos(v1-v2);
 
 // 	atualizaPc();
 
@@ -2237,8 +2218,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2257,7 +2238,7 @@ void lconst_0(){
 // 	int32_t retPilha;
 // 	memcpy(&retPilha, &resultado, sizeof(int32_t));
 
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
 
 // 	atualizaPc();
 // }
@@ -2299,8 +2280,8 @@ void lconst_0(){
 // 	alta = valorPilha >> 32;
 // 	baixa = valorPilha & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2309,7 +2290,7 @@ void lconst_0(){
 // 	int32_t v1 = pop_op();
 // 	int32_t v2 = pop_op();
 
-// 	push((int32_t)(v1 * v2));
+// 	push_pilha_operandos((int32_t)(v1 * v2));
 
 // 	atualizaPc();
 // }
@@ -2341,8 +2322,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2361,7 +2342,7 @@ void lconst_0(){
 // 	int32_t retPilha;
 // 	memcpy(&retPilha, &resultado, sizeof(int32_t));
 
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
 
 // 	atualizaPc();
 // }
@@ -2403,8 +2384,8 @@ void lconst_0(){
 // 	alta = valorPilha >> 32;
 // 	baixa = valorPilha & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2414,7 +2395,7 @@ void lconst_0(){
 // 	int32_t v2 = pop_op();
 // 	int32_t v1 = pop_op();
 
-// 	push((int32_t)(v1 / v2));
+// 	push_pilha_operandos((int32_t)(v1 / v2));
 
 // 	atualizaPc();
 // }
@@ -2445,8 +2426,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2465,7 +2446,7 @@ void lconst_0(){
 // 	int32_t retPilha;
 // 	memcpy(&retPilha, &resultado, sizeof(int32_t));
 
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
 
 // 	atualizaPc();
 // }
@@ -2506,8 +2487,8 @@ void lconst_0(){
 // 	alta = pilhaVal >> 32;
 // 	baixa = pilhaVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2517,7 +2498,7 @@ void lconst_0(){
 // 	int32_t v2 = pop_op();
 // 	int32_t v1 = pop_op();
 
-// 	push((int32_t)(v1 % v2));
+// 	push_pilha_operandos((int32_t)(v1 % v2));
 
 // 	atualizaPc();
 // }
@@ -2548,8 +2529,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2568,7 +2549,7 @@ void lconst_0(){
 // 	int32_t retPilha;
 // 	memcpy(&retPilha, &resultado, sizeof(int32_t));
 
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
 
 // 	atualizaPc();
 // }
@@ -2609,8 +2590,8 @@ void lconst_0(){
 // 	alta = pilhaVal >> 32;
 // 	baixa = pilhaVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 
@@ -2622,7 +2603,7 @@ void lconst_0(){
 
 // 	int32_t aux = -retPilha;
 
-// 	push(aux);
+// 	push_pilha_operandos(aux);
 
 // 	atualizaPc();
 // }
@@ -2644,8 +2625,8 @@ void lconst_0(){
 // 	alta = lVal >> 32;
 // 	baixa = lVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 //     foi_lneg = true;
@@ -2662,7 +2643,7 @@ void lconst_0(){
 
 // 	memcpy(&retPilha,&fVal,sizeof(int32_t));
 
-// 	push(retPilha);
+// 	push_pilha_operandos(retPilha);
 
 // 	atualizaPc();
 // }
@@ -2690,8 +2671,8 @@ void lconst_0(){
 // 	alta = dVal >> 32;
 // 	baixa = dVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2703,7 +2684,7 @@ void lconst_0(){
 
 // 	int32_t sVal = pop_op();
 // 	sVal = sVal << shift;
-// 	push(sVal);
+// 	push_pilha_operandos(sVal);
 
 // 	atualizaPc();
 // }
@@ -2728,8 +2709,8 @@ void lconst_0(){
 // 	alta = lVal >> 32;
 // 	baixa = lVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2747,7 +2728,7 @@ void lconst_0(){
 // 		i += 1;
 // 	}
 
-// 	push(sVal);
+// 	push_pilha_operandos(sVal);
 
 // 	atualizaPc();
 // }
@@ -2767,8 +2748,8 @@ void lconst_0(){
 
 // 	alta = lVal >> 32;
 // 	baixa = lVal & 0xffffffff;
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2780,7 +2761,7 @@ void lconst_0(){
 
 // 	int32_t sVal = pop_op();
 // 	sVal = sVal >> shift;
-// 	push(sVal);
+// 	push_pilha_operandos(sVal);
 
 // 	atualizaPc();
 // }
@@ -2805,8 +2786,8 @@ void lconst_0(){
 // 	alta = lVal >> 32;
 // 	baixa = lVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2818,7 +2799,7 @@ void lconst_0(){
 
 // 	int32_t aux = pop1 & pop2;
 
-// 	push(aux);
+// 	push_pilha_operandos(aux);
 
 // 	get_frame_atual()->pc++;
 // }
@@ -2849,8 +2830,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2862,7 +2843,7 @@ void lconst_0(){
 
 // 	int32_t aux = pop1 | pop2;
 
-// 	push(aux);
+// 	push_pilha_operandos(aux);
 
 // 	get_frame_atual()->pc++;
 
@@ -2894,8 +2875,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	inicializa_decodificador(dec);
 // 	int num_bytes = dec[get_frame_atual()->code[get_frame_atual()->pc]].bytes;
@@ -2910,7 +2891,7 @@ void lconst_0(){
 
 // 	int32_t aux = pop1 ^ pop2;
 
-// 	push(aux);
+// 	push_pilha_operandos(aux);
 
 // 	get_frame_atual()->pc++;
 
@@ -2942,8 +2923,8 @@ void lconst_0(){
 // 	alta = resultado >> 32;
 // 	baixa = resultado & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -2975,8 +2956,8 @@ void lconst_0(){
 // 	alta = long_num >> 32;
 // 	baixa = long_num & 0xffffffff;
 
-//     push(alta);
-//     push(baixa);
+//     push_pilha_operandos(alta);
+//     push_pilha_operandos(baixa);
 
 //     atualizaPc();
 // }
@@ -2992,7 +2973,7 @@ void lconst_0(){
 // 	int32_t valPilha;
 // 	memcpy(&valPilha, &valF, sizeof(int32_t));
 
-// 	push(valPilha);
+// 	push_pilha_operandos(valPilha);
 
 // 	atualizaPc();
 // }
@@ -3016,8 +2997,8 @@ void lconst_0(){
 
 // 	baixa = pilhaVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -3030,7 +3011,7 @@ void lconst_0(){
 // 	baixa = pop_op();
 // 	alta = pop_op();
 
-// 	push(baixa);
+// 	push_pilha_operandos(baixa);
 // 	atualizaPc();
 // }
 
@@ -3054,7 +3035,7 @@ void lconst_0(){
 // 	int32_t valPilha;
 // 	memcpy(&valPilha, &fVal, sizeof(int32_t));
 
-// 	push(valPilha);
+// 	push_pilha_operandos(valPilha);
 
 // 	atualizaPc();
 // }
@@ -3082,8 +3063,8 @@ void lconst_0(){
 // 	alta = valorPilha >> 32;
 // 	baixa = valorPilha & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -3096,7 +3077,7 @@ void lconst_0(){
 
 // 	float fVal;
 // 	memcpy(&fVal, &retPilha, sizeof(int32_t));
-// 	push((int32_t)fVal);
+// 	push_pilha_operandos((int32_t)fVal);
 // 	atualizaPc();
 // }
 
@@ -3118,8 +3099,8 @@ void lconst_0(){
 
 // 	baixa = lVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -3145,8 +3126,8 @@ void lconst_0(){
 
 // 	baixa = pilhaVal & 0xffffffff;
 
-// 	push(alta);
-// 	push(baixa);
+// 	push_pilha_operandos(alta);
+// 	push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -3168,7 +3149,7 @@ void lconst_0(){
 // 	double v1;
 // 	memcpy(&v1, &dVal, sizeof(double));
 
-// 	push((int32_t)v1);
+// 	push_pilha_operandos((int32_t)v1);
 // 	atualizaPc();
 // }
 
@@ -3193,8 +3174,8 @@ void lconst_0(){
 // 	alta = long_num >> 32;
 // 	baixa = long_num & 0xffffffff;
 
-//     push(alta);
-//     push(baixa);
+//     push_pilha_operandos(alta);
+//     push_pilha_operandos(baixa);
 
 // 	atualizaPc();
 // }
@@ -3221,7 +3202,7 @@ void lconst_0(){
 // 	int32_t pilhaVal;
 // 	memcpy(&pilhaVal,&fVal,sizeof(float));
 
-// 	push(pilhaVal);
+// 	push_pilha_operandos(pilhaVal);
 
 // 	atualizaPc();
 // }
@@ -3232,7 +3213,7 @@ void lconst_0(){
 
 // 	int8_t bVal = (int8_t) valPilha;
 
-// 	push((int32_t) bVal);
+// 	push_pilha_operandos((int32_t) bVal);
 // 	atualizaPc();
 // }
 
@@ -3244,7 +3225,7 @@ void lconst_0(){
 
 // 	int16_t cVal = (int16_t) valPilha;
 
-// 	push((int32_t) cVal);
+// 	push_pilha_operandos((int32_t) cVal);
 // 	atualizaPc();
 // }
 
@@ -3254,7 +3235,7 @@ void lconst_0(){
 
 // 	int16_t cVal = (int16_t) valPilha;
 
-// 	push((int32_t) cVal);
+// 	push_pilha_operandos((int32_t) cVal);
 // 	atualizaPc();
 // }
 
@@ -3279,13 +3260,13 @@ void lconst_0(){
 // 	lVal2 = lVal2 + baixa;
 
 // 	if(lVal2 == lVal){
-// 		push((int32_t)0);
+// 		push_pilha_operandos((int32_t)0);
 // 	}
 // 	else if(lVal2 > lVal){
-// 		push((int32_t)1);
+// 		push_pilha_operandos((int32_t)1);
 // 	}
 // 	else if(lVal2 < lVal){
-// 		push((int32_t)-1);
+// 		push_pilha_operandos((int32_t)-1);
 // 	}
 
 // 	atualizaPc();
@@ -3306,17 +3287,17 @@ void lconst_0(){
 // 	memcpy(&val1,&retPilha,sizeof(float));
 
 // 	if(val1 == val2){
-// 		push((int32_t)0);
+// 		push_pilha_operandos((int32_t)0);
 // 	}
 // 	else if(val1 > val2){
-// 		push((int32_t)1);
+// 		push_pilha_operandos((int32_t)1);
 // 	}
 // 	else if(val1 < val2){
-// 		push((int32_t)-1);
+// 		push_pilha_operandos((int32_t)-1);
 // 	}
 // 	else{
 // 		printf("NaN!!\n");
-// 		push((int32_t)-1);
+// 		push_pilha_operandos((int32_t)-1);
 // 	}
 
 // 	atualizaPc();
@@ -3337,17 +3318,17 @@ void lconst_0(){
 // 	memcpy(&val1,&retPilha,sizeof(float));
 
 // 	if(val1 == val2){
-// 		push((int32_t)0);
+// 		push_pilha_operandos((int32_t)0);
 // 	}
 // 	else if(val1 > val2){
-// 		push((int32_t)1);
+// 		push_pilha_operandos((int32_t)1);
 // 	}
 // 	else if(val1 < val2){
-// 		push((int32_t)-1);
+// 		push_pilha_operandos((int32_t)-1);
 // 	}
 // 	else{
 // 		printf("NaN!!\n");
-// 		push((int32_t)1);
+// 		push_pilha_operandos((int32_t)1);
 // 	}
 
 // 	atualizaPc();
@@ -3380,17 +3361,17 @@ void lconst_0(){
 // 	memcpy(&doubleCmpl2, &dVal2, sizeof(double));
 
 // 	if(doubleCmpl2 > doubleCmpl){
-// 		push((int32_t)1);
+// 		push_pilha_operandos((int32_t)1);
 // 	}
 // 	else if(doubleCmpl2 == doubleCmpl){
-// 		push((int32_t)0);
+// 		push_pilha_operandos((int32_t)0);
 // 	}
 // 	else if(doubleCmpl2 < doubleCmpl){
-// 		push((int32_t)-1);
+// 		push_pilha_operandos((int32_t)-1);
 // 	}
 // 	else{
 // 		printf("NaN!\n");
-// 		push((int32_t) -1);
+// 		push_pilha_operandos((int32_t) -1);
 // 	}
 
 // 	atualizaPc();
@@ -3423,17 +3404,17 @@ void lconst_0(){
 // 	memcpy(&doubleCmpl2, &dVal2, sizeof(double));
 
 // 	if(doubleCmpl2 > doubleCmpl){
-// 		push((int32_t)1);
+// 		push_pilha_operandos((int32_t)1);
 // 	}
 // 	else if(doubleCmpl2 == doubleCmpl){
-// 		push((int32_t)0);
+// 		push_pilha_operandos((int32_t)0);
 // 	}
 // 	else if(doubleCmpl2 < doubleCmpl){
-// 		push((int32_t)-1);
+// 		push_pilha_operandos((int32_t)-1);
 // 	}
 // 	else{
 // 		printf("NaN!\n");
-// 		push((int32_t) 1);
+// 		push_pilha_operandos((int32_t) 1);
 // 	}
 
 // 	atualizaPc();
@@ -3729,7 +3710,7 @@ void lconst_0(){
 
 // void jsr(){
 
-// 	push(get_frame_atual()->pc+3);
+// 	push_pilha_operandos(get_frame_atual()->pc+3);
 
 // 	uint8_t offset1,offset2;
 // 	int16_t offset;
@@ -4007,8 +3988,8 @@ void lconst_0(){
 // 		int32_t baixa = obj->campos[i];
 // 		int32_t alta = obj->campos[i+1];
 
-// 		push(alta);
-// 		push(baixa);
+// 		push_pilha_operandos(alta);
+// 		push_pilha_operandos(baixa);
 // 		atualizaPc();
 //  	}
 //  	else{
@@ -4018,7 +3999,7 @@ void lconst_0(){
 
 // 	 	uint32_t val = obj->campos[i];
 
-// 	 	push(val);
+// 	 	push_pilha_operandos(val);
 
 // 		atualizaPc();
 // 	}
@@ -4120,7 +4101,7 @@ void lconst_0(){
 // 	if((strcmp(nomeClasse, "java/util/Scanner") == 0) && (strcmp(nomeMetodo,"next") == 0)){
 // 		int32_t aux;
 // 		scanf("%d",&aux);
-// 		push(aux);
+// 		push_pilha_operandos(aux);
 // 		foi_lneg = false;
 // 		atualizaPc();
 // 		return;
@@ -4405,7 +4386,7 @@ void lconst_0(){
 
 // 			int32_t retPilha = pop_op();
 // 			pop_op();
-// 			push(retPilha);
+// 			push_pilha_operandos(retPilha);
 
 //             atualizaPc();
 //             return; 
@@ -4433,8 +4414,8 @@ void lconst_0(){
 // 			alta = aux >> 32;
 // 			baixa = aux & 0xffffffff;
 
-// 			push(alta);
-// 			push(baixa);
+// 			push_pilha_operandos(alta);
+// 			push_pilha_operandos(baixa);
 
 //             atualizaPc();
 //             return; 
@@ -4550,7 +4531,7 @@ void lconst_0(){
 // 		printf("Objeto não foi corretamente alocado\n");
 // 	}
 
-// 	push((int32_t) objeto);
+// 	push_pilha_operandos((int32_t) objeto);
 // 	atualizaPc();
 // }
 
@@ -4606,7 +4587,7 @@ void lconst_0(){
 // 	arrayVetores[qtdArrays-1].referencia = (int32_t)vetor;
 // 	arrayVetores[qtdArrays-1].tipo = tipoArray;
 
-// 	push((int32_t)vetor);
+// 	push_pilha_operandos((int32_t)vetor);
 
 //     atualizaPc();
 
@@ -4664,7 +4645,7 @@ void lconst_0(){
 // 	arrayVetores[qtdArrays-1].referencia = (int32_t)vetor;
 // 	arrayVetores[qtdArrays-1].tipo = tipoArray;
 
-// 	push((int32_t)vetor);
+// 	push_pilha_operandos((int32_t)vetor);
 
 //     atualizaPc();
 // }
@@ -4679,14 +4660,14 @@ void lconst_0(){
 // 		if(arrayVetores[i].referencia == arrayRef){
 
 // 			int32_t length = arrayVetores[i].tamanho;
-// 			push(length);
+// 			push_pilha_operandos(length);
 // 			atualizaPc();
 // 			return;
 // 		}
 // 		i++;
 // 	}
 
-// 	push(0);
+// 	push_pilha_operandos(0);
 // 	atualizaPc();
 // }
 
@@ -4713,7 +4694,7 @@ void lconst_0(){
 // 		printf("Objeto é do tipo: %s\n",nomeIndice);
 // 	}
 
-// 	push((int32_t)objeto);
+// 	push_pilha_operandos((int32_t)objeto);
 // 	atualizaPc();
 // }
 
@@ -4730,7 +4711,7 @@ void lconst_0(){
 
 // 	if(objeto == NULL){
 // 		printf("Objeto nulo!\n");
-// 		push(0);
+// 		push_pilha_operandos(0);
 // 	}
 
 // 	char* nomeClasse = retornaNomeClasse(objeto->classe);
@@ -4739,7 +4720,7 @@ void lconst_0(){
 
 // 	if(strcmp(nomeClasse,nomeIndice) == 0){
 // 		printf("Objeto é do tipo: %s\n",nomeIndice);
-// 		push(1);
+// 		push_pilha_operandos(1);
 // 	}
 // 	atualizaPc();
 // }
@@ -4809,7 +4790,7 @@ void lconst_0(){
 // void jsr_w(){
 // 	int32_t deslocamento,offset1,offset2,offset3,offset4;
 
-// 	push(get_frame_atual()->code[get_frame_atual()->pc + 5]);
+// 	push_pilha_operandos(get_frame_atual()->code[get_frame_atual()->pc + 5]);
 
 // 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
 // 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
