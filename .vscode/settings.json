@@ -3,7 +3,8 @@
         "leitor.h": "c",
         "string.h": "c",
         "decodificador.h": "c",
-        "frame.h": "c"
+        "frame.h": "c",
+        "instrucao.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

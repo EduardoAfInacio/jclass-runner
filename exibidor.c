@@ -27,6 +27,11 @@
 
 #include "./includes/exibidor.h"
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 void print_prompt(ClassFile* cf) {
   printf("----General Information----\n");
   printf("CAFEBABE: 0x%0x \n", cf->magic);
@@ -320,12 +325,9 @@ void print_code(ClassFile* cf, CodeAttribute* cd_atrb) {
   printf("Local variable max: %d\n", cd_atrb->max_locals);
   printf("Code size: %d\n", cd_atrb->code_length);
 
-  decoder dec[MAX_INSTRUCTIONS_NUMBER];
-  start_decoder(dec);
-
   for (uint32_t k = 0; k < cd_atrb->code_length;) {
     opcode = cd_atrb->code[k];
-    printf("%d: %s  ", k, dec[opcode].instruction);
+    printf("%d: %s  ", k, instrucoes[opcode].nome);
 
     k++;
 
@@ -421,7 +423,7 @@ void print_code(ClassFile* cf, CodeAttribute* cd_atrb) {
           opcode == LLOAD || opcode == DLOAD || opcode == ISTORE ||
           opcode == FSTORE || opcode == ASTORE || opcode == LSTORE ||
           opcode == DSTORE || opcode == RET) {
-        printf("%d: %s  ", k - 1, dec[opcode].instruction);
+        printf("%d: %s  ", k - 1, instrucoes[opcode].nome);
 
         k++;
 
@@ -459,7 +461,7 @@ void print_code(ClassFile* cf, CodeAttribute* cd_atrb) {
     }
 
     else {
-      int num_bytes = dec[opcode].bytes;
+      int num_bytes = instrucoes[opcode].bytes;
       for (int l = 0; l < num_bytes; l++) {
         printf("%d  ", cd_atrb->code[k]);
         if (cd_atrb->code[k] != 0)

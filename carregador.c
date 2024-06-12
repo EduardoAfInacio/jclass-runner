@@ -1,5 +1,7 @@
 #include "includes/carregador.h"
 
+#include <stdlib.h>
+
 Classes classes;
 
 void carrega_object() {

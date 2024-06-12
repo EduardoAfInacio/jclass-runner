@@ -3,6 +3,7 @@
 #include "includes/exibidor.h"
 #include "includes/leitor.h"
 #include "includes/carregador.h"
+#include "includes/frame.h"
 
 int main(int argc, char *args[]) {
   
@@ -11,9 +12,11 @@ int main(int argc, char *args[]) {
     return 0;
   }
 
-  carrega_object();
+  // inicializações
+  inicializa_instrucoes();
+  inicializa_pilha_frames();
 
-  print_prompt(classes.content[0]);
+  carrega_object();
 
   return 0;
 }

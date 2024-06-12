@@ -27,6 +27,9 @@
 
 #include "./includes/leitor.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "./includes/exibidor.h"
 
 ClassFile* class_reader(char* nomeClass) {
@@ -283,9 +286,6 @@ void save_instructions(CodeAttribute** cd_atrb, FILE* file) {
   int bytes_preench, offsets;
   uint32_t default_v, low, high, npairs;
 
-  decoder dec[MAX_INSTRUCTIONS_NUMBER];
-  start_decoder(dec);
-
   (*cd_atrb)->code =
       (uint8_t*)malloc((*cd_atrb)->code_length * sizeof(uint8_t));
 
@@ -410,7 +410,7 @@ void save_instructions(CodeAttribute** cd_atrb, FILE* file) {
     }
 
     else {
-      int num_bytes = dec[opcode].bytes;
+      int num_bytes = instrucoes[opcode].bytes;
       for (int l = 0; l < num_bytes; l++) {
         fread(&((*cd_atrb)->code[k]), 1, 1, file);
 

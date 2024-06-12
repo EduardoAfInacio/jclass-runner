@@ -1,13 +1,10 @@
 #ifndef LEITOR_EXIBIDOR_H
 #define LEITOR_EXIBIDOR_H
 
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdint.h>
 
-#include "decodificador.h"
+#include "instrucao.h"
 
 #define CONSTANT_Class 7
 #define CONSTANT_Fieldref 9
@@ -33,8 +30,6 @@
 #define Interface 0x0200
 #define Abstract 0x0400
 #define Strict 0x0800
-
-#define MAX_INSTRUCTIONS_NUMBER 256
 
 #define TABLESWITCH 170
 #define LOOKUPSWITCH 171

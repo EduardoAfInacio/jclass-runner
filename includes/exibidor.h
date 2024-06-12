@@ -1,12 +1,6 @@
 #ifndef PRINT_H
 #define PRINT_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "leitor.h"
 
 void print_prompt(ClassFile* cf);
