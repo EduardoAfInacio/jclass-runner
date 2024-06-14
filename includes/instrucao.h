@@ -3,7 +3,7 @@
 
 #define NUM_INSTRUCOES 256
 
-#include <stdint.h> 
+#include <stdint.h>
 
 typedef struct {
     char* nome;
@@ -124,13 +124,13 @@ void lmul();
 void fmul();
 void dmul();
 void idiv();
-void ins_ldiv();
+void jvm_ldiv();
 void fdiv();
 void ddiv();
 void irem();
 void lrem();
 void frem();
-void _drem();
+void jvm_drem();
 void ineg();
 void lneg();
 void fneg();

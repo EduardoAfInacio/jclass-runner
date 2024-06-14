@@ -13,7 +13,7 @@ void inicializa_pilha_frames()
 
 void add_frame(ClassFile *classe, uint16_t method_index)
 {
-    CodeAttribute* code = classe->methods[method_index].code_attribute;
+    CodeAttribute *code = classe->methods[method_index].code_attribute;
 
     pilha_frame->frames = realloc(pilha_frame->frames, (pilha_frame->length + 1) * sizeof(Frame));
     pilha_frame->frames[pilha_frame->length].pc = 0;
@@ -22,14 +22,14 @@ void add_frame(ClassFile *classe, uint16_t method_index)
     pilha_frame->frames[pilha_frame->length].max_locals = code->max_locals;
     pilha_frame->frames[pilha_frame->length].code_length = code->code_length;
     pilha_frame->frames[pilha_frame->length].code = code->code;
-    pilha_frame->frames[pilha_frame->length].fields = calloc(1, sizeof(uint32_t) * pilha_frame->frames[pilha_frame->length].max_locals);
-    pilha_frame->frames[pilha_frame->length].operandos = NULL;
+    pilha_frame->frames[pilha_frame->length].fields = calloc(1, sizeof(int32_t) * pilha_frame->frames[pilha_frame->length].max_locals);
+    pilha_frame->frames[pilha_frame->length].operandos = calloc(1, sizeof(int32_t) * pilha_frame->frames[pilha_frame->length].max_stack);
     pilha_frame->frames[pilha_frame->length].operandos_length = 0;
 
     pilha_frame->length++;
 }
 
-Frame* get_frame_atual()
+Frame *get_frame_atual()
 {
     if (!pilha_frame->length)
     {
@@ -42,25 +42,40 @@ Frame* get_frame_atual()
 
 void executa_frame_atual()
 {
-    Frame* frame_atual = get_frame_atual();
+    Frame *frame_atual = get_frame_atual();
 }
 
 void push_pilha_operandos(int32_t valor)
 {
-    Frame* frame_atual = get_frame_atual();
+    Frame *frame_atual = get_frame_atual();
 
-    if(frame_atual->operandos_length >= frame_atual->max_stack){
-		printf("ERRO: Pilha de operandos excedida!\n");
-		exit(0);
-	}
+    if (frame_atual->operandos_length >= frame_atual->max_stack)
+    {
+        printf("ERRO: Pilha de operandos excedida!\n");
+        exit(0);
+    }
 
-    frame_atual->operandos = realloc(frame_atual->operandos, sizeof(int32_t) * (frame_atual->operandos_length + 1));
     frame_atual->operandos[frame_atual->operandos_length] = valor;
     frame_atual->operandos_length++;
 }
 
-void atualiza_pc()
+int32_t pop_pilha_operandos()
 {
     Frame* frame_atual = get_frame_atual();
+
+    if (frame_atual->operandos_length == 0)
+    {
+        printf("ERRO: Pilha de operandos vazia\n");
+        exit(1);
+    }
+
+    frame_atual->operandos_length--;
+
+    return frame_atual->operandos[frame_atual->operandos_length];
+}
+
+void atualiza_pc()
+{
+    Frame *frame_atual = get_frame_atual();
     frame_atual->pc = instrucoes[frame_atual->pc].bytes + 1;
 }

@@ -4,7 +4,8 @@
         "string.h": "c",
         "decodificador.h": "c",
         "frame.h": "c",
-        "instrucao.h": "c"
+        "instrucao.h": "c",
+        "system_error": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

@@ -1,5 +1,9 @@
 #include "includes/instrucao.h"
 #include "includes/frame.h"
+#include "includes/utils.h"
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
 Instrucao instrucoes[NUM_INSTRUCOES];
 
@@ -625,4182 +629,1735 @@ void inicializa_instrucoes()
     instrucoes[255].bytes = 0;
 }
 
-void nop(){
-    Frame* frame_atual = get_frame_atual();
+void nop()
+{
     atualiza_pc();
 }
 
-void aconst_null(){
-    Frame* frame_atual = get_frame_atual();
-
+void aconst_null()
+{
     push_pilha_operandos(0);
-
-	atualiza_pc();
+    atualiza_pc();
 }
 
-void iconst_m1(){
-    Frame* frame_atual = get_frame_atual();
-
+void iconst_m1()
+{
     push_pilha_operandos(-1);
+    atualiza_pc();
+}
+
+void iconst_0()
+{
+    push_pilha_operandos(0);
+    atualiza_pc();
+}
+
+void iconst_1()
+{
+    push_pilha_operandos(1);
+    atualiza_pc();
+}
+
+void iconst_2()
+{
+    push_pilha_operandos(2);
+    atualiza_pc();
+}
+
+void iconst_3()
+{
+    push_pilha_operandos(3);
+    atualiza_pc();
+}
+
+void iconst_4()
+{
+    push_pilha_operandos(4);
+    atualiza_pc();
+}
+
+void iconst_5()
+{
+    push_pilha_operandos(5);
+    atualiza_pc();
+}
+
+void lconst_0()
+{
+    Wide wide = divide_64(0);
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+    atualiza_pc();
+}
+
+void lconst_1()
+{
+    Wide wide = divide_64(1);
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+    atualiza_pc();
+}
+
+void fconst_0()
+{
+    push_pilha_operandos(float_to_int(0.0));
+    atualiza_pc();
+}
+
+void fconst_1()
+{
+    push_pilha_operandos(float_to_int(1.0));
+    atualiza_pc();
+}
+
+void fconst_2()
+{
+    push_pilha_operandos(float_to_int(2.0));
+    atualiza_pc();
+}
+
+void dconst_0()
+{
+    Wide wide = divide_64(double_to_int(0.0));
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+    atualiza_pc();
+}
+
+void dconst_1()
+{
+    Wide wide = divide_64(double_to_int(1.0));
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+    atualiza_pc();
+}
+
+void bipush()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t argumento = frame_atual->code[frame_atual->pc + 1];
+
+    push_pilha_operandos(argumento);
 
     atualiza_pc();
 }
 
-void iconst_0(){
-    Frame* frame_atual = get_frame_atual();
+void sipush()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t byte1, byte2;
 
-	push_pilha_operandos((int32_t) 0);
+    byte1 = frame_atual->code[(frame_atual->pc + 1)];
+    byte2 = frame_atual->code[(frame_atual->pc + 2)];
+
+    push_pilha_operandos((byte1 << 8) + byte2);
+    atualiza_pc();
+}
+
+void ldc()
+{
+    Frame *frame_atual = get_frame_atual();
+    uint32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t tag = frame_atual->constant_pool[indice - 1].tag;
+
+    switch (tag)
+    {
+    case CONSTANT_Float:
+        push_pilha_operandos(frame_atual->constant_pool[indice - 1].info.Float.bytes);
+        break;
+
+    case CONSTANT_Integer:
+        push_pilha_operandos(frame_atual->constant_pool[indice - 1].info.Integer.bytes);
+        break;
+
+    case CONSTANT_String:
+        int32_t indice_utf = get_utf(get_frame_atual()->constant_pool, indice - 1);
+        push_pilha_operandos(indice_utf);
+        break;
+
+    default:
+        printf("ERRO: ldc não implementada para tag %d\n", tag);
+        exit(1);
+        break;
+    }
+
+    atualiza_pc();
+}
+
+void ldc_w()
+{
+    Frame *frame_atual = get_frame_atual();
+    uint32_t indice = concat16(frame_atual->code[frame_atual->pc + 1], frame_atual->code[frame_atual->pc + 2]);
+    uint8_t tag = (frame_atual->constant_pool[indice - 1]).tag;
+
+    switch (tag)
+    {
+    case CONSTANT_Float:
+        push_pilha_operandos(frame_atual->constant_pool[indice - 1].info.Float.bytes);
+        break;
+
+    case CONSTANT_Integer:
+        push_pilha_operandos(frame_atual->constant_pool[indice - 1].info.Integer.bytes);
+        break;
+
+    case CONSTANT_String:
+        int32_t indice_utf = get_utf(get_frame_atual()->constant_pool, indice - 1);
+        push_pilha_operandos(indice_utf);
+        break;
+
+    default:
+        printf("ERRO: ldc_w não implementada para tag %d\n", tag);
+        exit(1);
+        break;
+    }
+
+    atualiza_pc();
+}
+
+void ldc2_w()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    uint32_t indice = concat16(frame_atual->code[frame_atual->pc + 1], frame_atual->code[frame_atual->pc + 2]);
+    uint8_t tag = (frame_atual->constant_pool[indice - 1]).tag;
+    uint32_t mais_significativos;
+    uint32_t menos_significativos;
+
+    switch (tag)
+    {
+    case CONSTANT_Long:
+        mais_significativos = frame_atual->constant_pool[indice - 1].info.Long.high_bytes;
+        menos_significativos = frame_atual->constant_pool[indice - 1].info.Long.low_bytes;
+        push_pilha_operandos(mais_significativos);
+        push_pilha_operandos(menos_significativos);
+        break;
+
+    case CONSTANT_Double:
+        mais_significativos = frame_atual->constant_pool[indice - 1].info.Double.high_bytes;
+        menos_significativos = frame_atual->constant_pool[indice - 1].info.Double.low_bytes;
+        push_pilha_operandos(mais_significativos);
+        push_pilha_operandos(menos_significativos);
+
+    default:
+        printf("ERRO: ldc2_w não implementada para tag %d\n", tag);
+        exit(1);
+        break;
+    }
+
+    atualiza_pc();
+}
+
+void iload()
+{
+    ;
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+
+    push_pilha_operandos(frame_atual->fields[indice]);
+    atualiza_pc();
+}
+
+void lload()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t mais_significativos = frame_atual->fields[indice];
+    int32_t menos_significativos = frame_atual->fields[indice + 1];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void fload()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[get_frame_atual()->pc + 1];
+
+    push_pilha_operandos(frame_atual->fields[indice]);
+    atualiza_pc();
+}
+
+void dload()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t mais_significativos = frame_atual->fields[indice];
+    int32_t menos_significativos = frame_atual->fields[indice + 1];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void aload()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+
+    push_pilha_operandos(frame_atual->fields[indice]);
+    atualiza_pc();
+}
+
+void iload_0()
+{
+    push_pilha_operandos(get_frame_atual()->fields[0]);
+    atualiza_pc();
+}
+
+void iload_1()
+{
+    push_pilha_operandos(get_frame_atual()->fields[1]);
+    atualiza_pc();
+}
+
+void iload_2()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[2]);
+    atualiza_pc();
+}
+
+void iload_3()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[3]);
+    atualiza_pc();
+}
+
+void lload_0()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[0];
+    int32_t menos_significativos = frame_atual->fields[1];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void lload_1()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[1];
+    int32_t menos_significativos = frame_atual->fields[2];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void lload_2()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[2];
+    int32_t menos_significativos = frame_atual->fields[3];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void lload_3()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[3];
+    int32_t menos_significativos = frame_atual->fields[4];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void fload_0()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[0]);
+    atualiza_pc();
+}
+
+void fload_1()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[1]);
+    atualiza_pc();
+}
+
+void fload_2()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[2]);
+    atualiza_pc();
+}
+
+void fload_3()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[3]);
+    atualiza_pc();
+}
+
+void dload_0()
+{
+
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[0];
+    int32_t menos_significativos = frame_atual->fields[1];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void dload_1()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[1];
+    int32_t menos_significativos = frame_atual->fields[2];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void dload_2()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[2];
+    int32_t menos_significativos = frame_atual->fields[3];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void dload_3()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t mais_significativos = frame_atual->fields[3];
+    int32_t menos_significativos = frame_atual->fields[4];
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void aload_0()
+{
+
+    push_pilha_operandos(get_frame_atual()->fields[0]);
+    atualiza_pc();
+}
+
+void aload_1()
+{
+    push_pilha_operandos(get_frame_atual()->fields[1]);
+    atualiza_pc();
+}
+
+void aload_2()
+{
+    push_pilha_operandos(get_frame_atual()->fields[1]);
+    atualiza_pc();
+}
+
+void aload_3()
+{
+    push_pilha_operandos(get_frame_atual()->fields[1]);
+    atualiza_pc();
+}
+
+void iaload()
+{
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    atualiza_pc();
+}
+
+void laload()
+{
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    push_pilha_operandos(referencia[indice + 1]);
+    atualiza_pc();
+}
+
+void faload()
+{
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    atualiza_pc();
+}
+
+void daload()
+{
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    push_pilha_operandos(referencia[indice + 1]);
+    atualiza_pc();
+}
+
+void aaload()
+{
+
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    atualiza_pc();
+}
+
+void baload()
+{
+    int32_t indice = pop_pilha_operandos();
+    int8_t *referencia = (int8_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    atualiza_pc();
+}
+
+void caload()
+{
+    int32_t indice = pop_pilha_operandos();
+    int16_t *referencia = (int16_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    atualiza_pc();
+}
+
+void saload()
+{
+
+    int32_t indice = pop_pilha_operandos();
+    int16_t *referencia = (int16_t *)(intptr_t)pop_pilha_operandos();
+
+    push_pilha_operandos(referencia[indice]);
+    atualiza_pc();
+}
+
+void istore()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+
+    frame_atual->fields[indice] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void lstore()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[indice] = mais_significativos;
+    frame_atual->fields[indice] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void fstore()
+{
+
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+
+    frame_atual->fields[indice] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void dstore()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[indice] = mais_significativos;
+    frame_atual->fields[indice] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void astore()
+{
+
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+
+    frame_atual->fields[indice] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void istore_0()
+{
+
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[0] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void istore_1()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[1] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void istore_2()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[2] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void istore_3()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[3] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void lstore_0()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[0] = mais_significativos;
+    frame_atual->fields[1] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void lstore_1()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[1] = mais_significativos;
+    frame_atual->fields[2] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void lstore_2()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[2] = mais_significativos;
+    frame_atual->fields[3] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void lstore_3()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[3] = mais_significativos;
+    frame_atual->fields[4] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void fstore_0()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[0] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void fstore_1()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[1] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void fstore_2()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[2] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void fstore_3()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[3] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void dstore_0()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[0] = mais_significativos;
+    frame_atual->fields[1] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void dstore_1()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[1] = mais_significativos;
+    frame_atual->fields[2] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void dstore_2()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[2] = mais_significativos;
+    frame_atual->fields[3] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void dstore_3()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    frame_atual->fields[3] = mais_significativos;
+    frame_atual->fields[4] = menos_significativos;
+
+    atualiza_pc();
+}
+
+void astore_0()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[0] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void astore_1()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[1] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void astore_2()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[2] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void astore_3()
+{
+    Frame *frame_atual = get_frame_atual();
+
+    frame_atual->fields[3] = pop_pilha_operandos();
+    atualiza_pc();
+}
+
+void iastore()
+{
+    int32_t valor = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = valor;
+    atualiza_pc();
+}
+
+void lastore()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = menos_significativos;
+    referencia[indice + 1] = mais_significativos;
+
+    atualiza_pc();
+}
+
+void fastore()
+{
+    int32_t valor = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = valor;
+    atualiza_pc();
+}
+
+void dastore()
+{
+    Frame *frame_atual = get_frame_atual();
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = menos_significativos;
+    referencia[indice + 1] = mais_significativos;
+
+    atualiza_pc();
+}
+
+void aastore()
+{
+    int32_t valor = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int32_t *referencia = (int32_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = valor;
+    atualiza_pc();
+}
+
+void bastore()
+{
+    int8_t valor = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int8_t *referencia = (int8_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = valor;
+    atualiza_pc();
+}
+
+void castore()
+{
+
+    int16_t valor = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int16_t *referencia = (int16_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = valor;
+    atualiza_pc();
+}
+
+void sastore()
+{
+
+    int16_t valor = pop_pilha_operandos();
+    int32_t indice = pop_pilha_operandos();
+    int16_t *referencia = (int16_t *)(intptr_t)pop_pilha_operandos();
+
+    referencia[indice] = valor;
+    atualiza_pc();
+}
+
+void pop()
+{
+    pop_pilha_operandos();
+
+    atualiza_pc();
+}
+
+void pop2()
+{
+
+    pop_pilha_operandos();
+    pop_pilha_operandos();
+
+    atualiza_pc();
+}
+
+void dup()
+{
+    int32_t valor = pop_pilha_operandos();
+
+    push_pilha_operandos(valor);
+    push_pilha_operandos(valor);
+    atualiza_pc();
+}
+
+void dup_x1()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor1);
+
+    push_pilha_operandos(valor2);
+
+    push_pilha_operandos(valor1);
+
+    atualiza_pc();
+}
+
+void dup_x2()
+{
+
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+    int32_t valor3 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor1);
+    push_pilha_operandos(valor3);
+    push_pilha_operandos(valor2);
+    push_pilha_operandos(valor1);
+
+    atualiza_pc();
+}
+
+void dup2()
+{
+
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void dup2_x1()
+{
+
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int32_t valor = pop_pilha_operandos();
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+    push_pilha_operandos(valor);
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void dup2_x2()
+{
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+    push_pilha_operandos(valor2);
+    push_pilha_operandos(valor1);
+    push_pilha_operandos(mais_significativos);
+    push_pilha_operandos(menos_significativos);
+
+    atualiza_pc();
+}
+
+void swap()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor1);
+    push_pilha_operandos(valor2);
+
+    atualiza_pc();
+}
+
+void iadd()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 + valor1);
+
+    atualiza_pc();
+}
+
+void ladd()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    printf("%lld e %lld\n", valor1, valor2);
+
+    Wide wide = divide_64(valor2 + valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void fadd()
+{
+    float valor_f1, valor_f2, resultado;
+    int32_t valor_i;
+
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    memcpy(&valor_f1, &valor1, sizeof(int32_t));
+    memcpy(&valor_f2, &valor2, sizeof(int32_t));
+
+    resultado = valor_f2 + valor_f1;
+
+    memcpy(&valor_i, &resultado, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+
+    atualiza_pc();
+}
+
+void dadd()
+{
+    double valor_d1, valor_d2, resultado_d;
+    int64_t valor_i1, valor_i2, resultado_i;
+
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    valor_i1 = concat64(mais_significativos1, menos_significativos1);
+    valor_i2 = concat64(mais_significativos2, menos_significativos2);
+
+    memcpy(&valor_d1, &valor_i1, sizeof(int64_t));
+    memcpy(&valor_d2, &valor_i2, sizeof(int64_t));
+
+    resultado_d = valor_d2 + valor_d1;
+
+    memcpy(&resultado_i, &resultado_d, sizeof(int64_t));
+
+    Wide wide = divide_64(resultado_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void isub()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 - valor1);
+
+    atualiza_pc();
+}
+
+void lsub()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 - valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void fsub()
+{
+    float valor_f1, valor_f2, resultado;
+    int32_t valor_i;
+
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    memcpy(&valor_f1, &valor1, sizeof(int32_t));
+    memcpy(&valor_f2, &valor2, sizeof(int32_t));
+
+    resultado = valor_f2 - valor_f1;
+
+    memcpy(&valor_i, &resultado, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+
+    atualiza_pc();
+}
+
+void dsub()
+{
+    double valor_d1, valor_d2, resultado_d;
+    int64_t valor_i1, valor_i2, resultado_i;
+
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    valor_i1 = concat64(mais_significativos1, menos_significativos1);
+    valor_i2 = concat64(mais_significativos2, menos_significativos2);
+
+    memcpy(&valor_d1, &valor_i1, sizeof(int64_t));
+    memcpy(&valor_d2, &valor_i2, sizeof(int64_t));
+
+    resultado_d = valor_d2 - valor_d1;
+
+    memcpy(&resultado_i, &resultado_d, sizeof(int64_t));
+
+    Wide wide = divide_64(resultado_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void imul()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 * valor1);
+
+    atualiza_pc();
+}
+
+void lmul()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 * valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void fmul()
+{
+    float valor_f1, valor_f2, resultado;
+    int32_t valor_i;
+
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    memcpy(&valor_f1, &valor1, sizeof(int32_t));
+    memcpy(&valor_f2, &valor2, sizeof(int32_t));
+
+    resultado = valor_f2 * valor_f1;
+
+    memcpy(&valor_i, &resultado, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+
+    atualiza_pc();
+}
+
+void dmul()
+{
+    double valor_d1, valor_d2, resultado_d;
+    int64_t valor_i1, valor_i2, resultado_i;
+
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    valor_i1 = concat64(mais_significativos1, menos_significativos1);
+    valor_i2 = concat64(mais_significativos2, menos_significativos2);
+
+    memcpy(&valor_d1, &valor_i1, sizeof(int64_t));
+    memcpy(&valor_d2, &valor_i2, sizeof(int64_t));
+
+    resultado_d = valor_d2 * valor_d1;
+
+    memcpy(&resultado_i, &resultado_d, sizeof(int64_t));
+
+    Wide wide = divide_64(resultado_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void idiv()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 / valor1);
+
+    atualiza_pc();
+}
+
+void jvm_ldiv()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 / valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void fdiv()
+{
+    float valor_f1, valor_f2, resultado;
+    int32_t valor_i;
+
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    memcpy(&valor_f1, &valor1, sizeof(int32_t));
+    memcpy(&valor_f2, &valor2, sizeof(int32_t));
+
+    resultado = valor_f2 / valor_f1;
+
+    memcpy(&valor_i, &resultado, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+
+    atualiza_pc();
+}
+
+void ddiv()
+{
+    double valor_d1, valor_d2, resultado_d;
+    int64_t valor_i1, valor_i2, resultado_i;
+
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    valor_i1 = concat64(mais_significativos1, menos_significativos1);
+    valor_i2 = concat64(mais_significativos2, menos_significativos2);
+
+    memcpy(&valor_d1, &valor_i1, sizeof(int64_t));
+    memcpy(&valor_d2, &valor_i2, sizeof(int64_t));
+
+    resultado_d = valor_d2 / valor_d1;
+
+    memcpy(&resultado_i, &resultado_d, sizeof(int64_t));
+
+    Wide wide = divide_64(resultado_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void irem()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 % valor1);
+    atualiza_pc();
+}
+
+void lrem()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 % valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void frem()
+{
+    float valor_f1, valor_f2, resultado;
+    int32_t valor_i;
+
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    memcpy(&valor_f1, &valor1, sizeof(int32_t));
+    memcpy(&valor_f2, &valor2, sizeof(int32_t));
+
+    resultado = fmodf(valor_f2, valor_f1);
+
+    memcpy(&valor_i, &resultado, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+
+    atualiza_pc();
+}
+
+void jvm_drem()
+{
+    double valor_d1, valor_d2, resultado_d;
+    int64_t valor_i1, valor_i2, resultado_i;
+
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    valor_i1 = concat64(mais_significativos1, menos_significativos1);
+    valor_i2 = concat64(mais_significativos2, menos_significativos2);
+
+    memcpy(&valor_d1, &valor_i1, sizeof(int64_t));
+    memcpy(&valor_d2, &valor_i2, sizeof(int64_t));
+
+    resultado_d = fmod(valor_d2, valor_d1);
+
+    memcpy(&resultado_i, &resultado_d, sizeof(int64_t));
+
+    Wide wide = divide_64(resultado_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void ineg()
+{
+    int32_t valor = pop_pilha_operandos();
+    push_pilha_operandos(-valor);
+    atualiza_pc();
+}
+
+void lneg()
+{
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int64_t valor = concat64(mais_significativos, menos_significativos);
+
+    valor = -valor;
+
+    Wide wide = divide_64(valor);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void fneg()
+{
+    float valor_f;
+    int32_t valor_i;
+
+    int32_t valor = pop_pilha_operandos();
+
+    memcpy(&valor_f, &valor, sizeof(int32_t));
+
+    valor_f = -valor_f;
+
+    memcpy(&valor_i, &valor_f, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+
+    atualiza_pc();
+}
+
+void dneg()
+{
+    double valor_d;
+    int64_t valor_i;
+
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+
+    valor_i = concat64(mais_significativos, menos_significativos);
+
+    memcpy(&valor_d, &valor_i, sizeof(int64_t));
+
+    valor_d = -valor_d;
+
+    memcpy(&valor_i, &valor_d, sizeof(int64_t));
+
+    Wide wide = divide_64(valor_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void ishl()
+{
+    int32_t shift = pop_pilha_operandos() & 0x1f;
+    int32_t valor = pop_pilha_operandos();
+
+    push_pilha_operandos(valor << shift);
+    atualiza_pc();
+}
+
+void lshl()
+{
+    int32_t shift = pop_pilha_operandos() & 0x3f;
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int64_t valor = concat64(mais_significativos, menos_significativos);
+
+    Wide wide = divide_64(valor << shift);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void ishr()
+{
+    int32_t shift = pop_pilha_operandos() & 0x1f;
+    int32_t valor = pop_pilha_operandos();
+
+    push_pilha_operandos(valor >> shift);
+    atualiza_pc();
+}
+
+void lshr()
+{
+    int32_t shift = pop_pilha_operandos() & 0x3f;
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    int64_t valor = concat64(mais_significativos, menos_significativos);
+
+    Wide wide = divide_64(valor >> shift);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void iushr()
+{
+
+    int32_t shift = pop_pilha_operandos() & 0x1f;
+    uint32_t valor = pop_pilha_operandos();
+
+    push_pilha_operandos(valor >> shift);
+    atualiza_pc();
+}
+
+void lushr()
+{
+    int32_t shift = pop_pilha_operandos() & 0x3f;
+    int32_t menos_significativos = pop_pilha_operandos();
+    int32_t mais_significativos = pop_pilha_operandos();
+    uint64_t valor = concat64(mais_significativos, menos_significativos);
+
+    Wide wide = divide_64(valor >> shift);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void iand()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 % valor1);
+    atualiza_pc();
+}
+
+void land()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 & valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void ior()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 | valor1);
+    atualiza_pc();
+}
+
+void lor()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 | valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void ixor()
+{
+    int32_t valor1 = pop_pilha_operandos();
+    int32_t valor2 = pop_pilha_operandos();
+
+    push_pilha_operandos(valor2 ^ valor1);
+    atualiza_pc();
+}
+
+void lxor()
+{
+    int32_t menos_significativos1 = pop_pilha_operandos();
+    int32_t mais_significativos1 = pop_pilha_operandos();
+    int32_t menos_significativos2 = pop_pilha_operandos();
+    int32_t mais_significativos2 = pop_pilha_operandos();
+
+    int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
+    int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
+
+    Wide wide = divide_64(valor2 ^ valor1);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void iinc()
+{
+    Frame *frame_atual = get_frame_atual();
+    int8_t indice = frame_atual->code[frame_atual->pc + 1];
+    int8_t constante = frame_atual->code[frame_atual->pc + 2];
+
+    frame_atual->fields[indice] += constante;
+    atualiza_pc();
+}
+
+void i2l()
+{
+    int32_t valor = pop_pilha_operandos();
+    int64_t valor_l = valor;
+
+    Wide wide = divide_64(valor_l);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void i2f()
+{
+    int32_t valor = pop_pilha_operandos();
+    float valor_f = valor;
+    int32_t valor_i;
+
+    memcpy(&valor_i, &valor_f, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+    atualiza_pc();
+}
+
+void i2d()
+{
+    int32_t valor = pop_pilha_operandos();
+    double valor_d = valor;
+    int64_t valor_i;
+
+    memcpy(&valor_i, &valor_d, sizeof(int64_t));
+
+    Wide wide = divide_64(valor_i);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+    atualiza_pc();
+}
+
+void l2i()
+{
+    int32_t menos_significativo = pop_pilha_operandos();
+    int32_t mais_significativo = pop_pilha_operandos();
+
+    push_pilha_operandos(menos_significativo);
+    atualiza_pc();
+}
+
+void l2f()
+{
+    int32_t menos_significativo = pop_pilha_operandos();
+    int32_t mais_significativo = pop_pilha_operandos();
+    int64_t valor_l = concat64(mais_significativo, menos_significativo);
+    float valor_f = valor_l;
+    int32_t valor_i;
+
+    memcpy(&valor_i, &valor_f, sizeof(int32_t));
+
+    push_pilha_operandos(valor_i);
+    atualiza_pc();
+}
+
+void l2d()
+{
+    int32_t menos_significativo = pop_pilha_operandos();
+    int32_t mais_significativo = pop_pilha_operandos();
+    int64_t valor_l = concat64(mais_significativo, menos_significativo);
+    double valor_d = valor_l;
+
+    memcpy(&valor_l, &valor_d, sizeof(int64_t));
+
+    Wide wide = divide_64(valor_l);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+    atualiza_pc();
+}
+
+void f2i(){
+	int32_t valor = pop_pilha_operandos();
+	float valor_f;
+
+	memcpy(&valor_f, &valor, sizeof(int32_t));
+
+    int32_t valor_i = valor_f;
+
+	push_pilha_operandos(valor_i);
+	atualiza_pc();
+}
+
+void f2l(){
+	int32_t valor = pop_pilha_operandos();
+	float valor_f;
+
+	memcpy(&valor_f, &valor, sizeof(int32_t));
+
+	int64_t valor_l = valor_f;
+
+	Wide wide = divide_64(valor_l);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
 
 	atualiza_pc();
 }
 
-void iconst_1(){
-    Frame* frame_atual = get_frame_atual();
+void f2d(){
+    int32_t valor = pop_pilha_operandos();
+	float valor_f;
+    int64_t valor_l;
 
-    push_pilha_operandos(1);
+	memcpy(&valor_f, &valor, sizeof(int32_t));
 
-    atualiza_pc();
+	double valor_d = valor_f;
+
+    memcpy(&valor_l, &valor_d, sizeof(int64_t));
+
+	Wide wide = divide_64(valor_l);
+
+    push_pilha_operandos(wide.mais_significativo);
+    push_pilha_operandos(wide.menos_significativo);
+
+	atualiza_pc();
 }
 
-void iconst_2(){
-    Frame* frame_atual = get_frame_atual();
+void d2i(){
+	int32_t menos_significativo = pop_pilha_operandos();
+	int32_t mais_significativo = pop_pilha_operandos();
+    int64_t valor_l = concat64(mais_significativo, menos_significativo);
+    double valor_d;
 
-    push_pilha_operandos(2);
+    memcpy(&valor_d, &valor_l, sizeof(int64_t));
 
-    atualiza_pc();
+	push_pilha_operandos(valor_d);
+	atualiza_pc();
 }
 
-void iconst_3(){
-    Frame* frame_atual = get_frame_atual();
-
-    push_pilha_operandos(3);
-
-    atualiza_pc();
-}
-
-void iconst_4(){
-    Frame* frame_atual = get_frame_atual();
-
-    push_pilha_operandos(4);
-
-    atualiza_pc();
-}
-
-void iconst_5(){
-    Frame* frame_atual = get_frame_atual();
-
-    push_pilha_operandos(5);
-
-    atualiza_pc();
-}
-
-void lconst_0(){
-    push_pilha_operandos(0);
-    push_pilha_operandos(0);
-
-    atualiza_pc();
-}
-
-void lconst_1(){
-    push_pilha_operandos(0);
-    push_pilha_operandos(1);
-
-    get_frame_atual()->pc++;
-}
-
-// void fconst_0(){
-//     char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t* valPilha;
-
-// 	float valF = 0.0;
-
-// 	valPilha = (int32_t*) malloc(sizeof(int32_t));
-
-// 	memcpy(valPilha, &valF, sizeof(int32_t));
-
-// 	push_pilha_operandos(*valPilha);
-
-// 	atualizaPc();
-// }
-
-// void fconst_1(){
-//     char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t* valPilha;
-
-// 	float valF = 1.0;
-
-// 	valPilha = (int32_t*) malloc(sizeof(int32_t));
-
-// 	memcpy(valPilha, &valF, sizeof(int32_t));
-
-// 	push_pilha_operandos(*valPilha);
-
-// 	atualizaPc();
-// }
-
-// void fconst_2(){
-//     char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t* valPilha;
-
-// 	float valF = 2.0;
-
-// 	valPilha = (int32_t*) malloc(sizeof(int32_t));
-
-// 	memcpy(valPilha, &valF, sizeof(int32_t));
-
-// 	push_pilha_operandos(*valPilha);
-
-// 	atualizaPc();
-// }
-
-// void dconst_0(){
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     double double0 = 0.0; 
-//     int64_t temp; 
-//     int32_t parte_alta;
-//     int32_t parte_baixa;
-
-// 	memcpy(&temp, &double0, sizeof(int64_t));
-
-// 	parte_alta = temp >> 32;
-// 	parte_baixa = temp & 0xffffffff;
-
-//     push_pilha_operandos(parte_alta);
-//     push_pilha_operandos(parte_baixa);
-
-//     get_frame_atual()->pc++;
-// }
-
-// void dconst_1(){
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     double double1 = 1.0; 
-//     int64_t temp; 
-//     int32_t parte_alta;
-//     int32_t parte_baixa;
-
-// 	memcpy(&temp, &double1, sizeof(int64_t));
-
-// 	parte_alta = temp >> 32;
-// 	parte_baixa = temp & 0xffffffff;
-
-//     push_pilha_operandos(parte_alta);
-//     push_pilha_operandos(parte_baixa);
-
-//     get_frame_atual()->pc++;
-// }
-
-// void bipush_pilha_operandos(){
-// 	int8_t argumento = (int8_t) get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-// 	push_pilha_operandos((int32_t)argumento);
-
-// 	atualizaPc();
-// }
-
-// void sipush_pilha_operandos(){
-//     int32_t byte1, byte2;
-//     int32_t valor; 
-//     int16_t short_temp;
-
-// 	byte1 = get_frame_atual()->code[(get_frame_atual()->pc + 1)];
-
-// 	byte2 = get_frame_atual()->code[(get_frame_atual()->pc + 2)];
-
-//     short_temp = (byte1 << 8) + byte2;
-//     valor = (int32_t) short_temp;
-
-//     push_pilha_operandos(valor);
-//     atualizaPc();
-// }
-
-// void ldc(){
-//     uint32_t indice;
-//     tipoGlobal = NULL;
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Float || \
-//             get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Integer)
-//     {
-
-//         if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Float)
-//         {
-//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Float.bytes);
-//         }
-//         else
-//         {
-//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Integer.bytes);
-//         }
-//     }
-
-//     else if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_String) 
-//     {
-//         uint32_t indice_utf;
-//         indice_utf = obtem_utf_eq(get_frame_atual()->constant_pool, indice-1); 
-//         push_pilha_operandos(indice_utf);
-//     }
-
-//     else if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_String) 
-//     {
-
-//         printf("a implementar\n");
-//         exit(1);
-//     }
-
-//     else
-//     {
-//         printf("erro na instrucao ldc\n");
-//         exit(1);
-//     }
-
-//     atualizaPc();
-// }
-
-// void ldc_w(){
-//     uint32_t indice;
-
-// 	inicializa_decodificador(dec); 
-// 	int num_bytes = dec[get_frame_atual()->code[get_frame_atual()->pc]].bytes;
-
-//     indice = (get_frame_atual()->code[get_frame_atual()->pc + 1] << 8 + get_frame_atual()->code[get_frame_atual()->pc + 2]);
-
-//     if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Float || \
-//             get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Integer)
-//     {
-
-//         if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_Float)
-//         {
-//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Float.bytes);
-//         }
-//         else
-//         {
-//             push_pilha_operandos(get_frame_atual()->constant_pool[indice - 1].info.Integer.bytes);
-//         }
-//     }
-
-//     else if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_String) 
-//     {
-//         uint32_t indice_utf;
-//         indice_utf = obtem_utf_eq(get_frame_atual()->constant_pool, indice-1); 
-//         push_pilha_operandos(indice_utf);
-//     }
-
-//     else if (get_frame_atual()->constant_pool[indice - 1].tag == CONSTANT_String) 
-//     {
-
-//     }
-
-//     else
-//     {
-//         printf("erro na instrucao ldc\n");
-//         exit(1);
-//     }
-
-// 	for(int8_t i = 0; i < num_bytes + 1; i++)
-// 		get_frame_atual()->pc++;
-
-// }
-
-// void ldc2_w(){
-
-// 	uint8_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	uint8_t tag = (get_frame_atual()->constant_pool[indice-1]).tag;
-
-// 	if(tag == 5){
-// 		uint32_t alta = get_frame_atual()->constant_pool[indice-1].info.Long.high_bytes;
-// 		uint32_t baixa = get_frame_atual()->constant_pool[indice-1].info.Long.low_bytes;
-// 		push_pilha_operandos(alta);
-// 		push_pilha_operandos(baixa);
-// 	}
-
-// 	if(tag == 6){
-// 		uint32_t alta = get_frame_atual()->constant_pool[indice-1].info.Double.high_bytes;
-// 		uint32_t baixa = get_frame_atual()->constant_pool[indice-1].info.Double.low_bytes;
-// 		push_pilha_operandos(alta);
-// 		push_pilha_operandos(baixa);
-// 	}
-
-// 	atualizaPc();
-//     foi_lneg = false;
-
-// }
-
-// void iload(){
-
-//     char* tipo = "I";
-//     tipoGlobal = tipo;
-
-// 	int32_t argumento = (int32_t) get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	int32_t aux = get_frame_atual()->fields[argumento];
-// 	push_pilha_operandos(aux);
-
-// 	atualizaPc();
-
-// }
-
-// void lload(){
-// 	char* tipo = "L";
-//     tipoGlobal = tipo;
-
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void fload(){
-
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-//     int32_t indice, valor; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-// }
-
-// void dload(){
-
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-// }
-
-// void aload(){
-
-//     int32_t indice, valor; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-
-// }
-
-// void iload_0(){
-
-// 	char* tipo = "I";
-//     tipoGlobal = tipo;
-
-//     int32_t valor;
-
-//     valor = get_frame_atual()->fields[0];
-
-//     push_pilha_operandos(valor);
-
-// 	atualizaPc();
-// }
-
-// void iload_1(){
-// 	char* tipo = "I";
-//     tipoGlobal = tipo;
-
-//     int32_t valor;
-
-//     valor = get_frame_atual()->fields[1];
-
-//     push_pilha_operandos(valor);
-//     atualizaPc();
-// }
-
-// void iload_2(){
-
-// 	char* tipo = "I";
-//     tipoGlobal = tipo;
-
-//     int32_t valor;
-
-//     valor = get_frame_atual()->fields[2];
-
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-// }
-
-// void iload_3(){
-
-//     int32_t valor;
-//     char* tipo = "I";
-//     tipoGlobal = tipo;
-
-//     valor = get_frame_atual()->fields[3];
-
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-
-// }
-
-// void lload_0(){
-
-// 	char* tipo = "L";
-//     tipoGlobal = tipo;
-
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     indice = 0;
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-// 	atualizaPc();
-
-// }
-
-// void lload_1(){
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     char* tipo = "L";
-//     tipoGlobal = tipo;
-
-//     indice = 1;
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void lload_2(){
-
-// 	char* tipo = "L";
-//     tipoGlobal = tipo;
-
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     indice = 2;
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void lload_3(){
-
-// 	char* tipo = "L";
-//     tipoGlobal = tipo;
-
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     indice = 3;
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void fload_0(){
-
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-//     int32_t indice, valor; 
-
-//     indice = 0; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//    atualizaPc();
-
-// }
-
-// void fload_1(){
-
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-//     int32_t indice, valor; 
-
-//     indice = 1; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-
-// }
-
-// void fload_2(){
-
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-//     int32_t indice, valor; 
-
-//     indice = 2; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-
-// }
-
-// void fload_3(){
-
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-//     int32_t indice, valor; 
-
-//     indice = 3; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-
-// }
-
-// void dload_0(){
-
-// 	char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     indice = 0; 
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void dload_1(){
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     indice = 1; 
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void dload_2(){
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     indice = 2; 
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void dload_3(){
-//     int32_t indice;
-//     int32_t parte_alta, parte_baixa;
-
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-//     indice = 3; 
-
-//     parte_alta = get_frame_atual()->fields[indice + POS_ALTA];
-//     push_pilha_operandos(parte_alta);
-
-//     parte_baixa = get_frame_atual()->fields[indice + POS_BAIXA];
-//     push_pilha_operandos(parte_baixa);
-
-//     atualizaPc();
-
-// }
-
-// void aload_0(){
-
-// 	push_pilha_operandos(get_frame_atual()->fields[0]);
-// 	atualizaPc();
-// }
-
-// void aload_1(){
-//     int32_t indice, valor; 
-
-//     indice = 1; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-//     atualizaPc();
-// }
-
-// void aload_2(){
-//     int32_t indice, valor; 
-
-//     indice = 2; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//    atualizaPc();
-// }
-
-// void aload_3(){
-//     int32_t indice, valor; 
-
-//     indice = 3; 
-
-//     valor = get_frame_atual()->fields[indice];
-//     push_pilha_operandos(valor);
-
-//     atualizaPc();
-
-// }
-
-// void iaload(){
-
-// 	int32_t* referencia;
-
-// 	int32_t indice = pop_op();
-
-// 	referencia = (int32_t*)pop_op();
-
-// 	push_pilha_operandos(referencia[indice]);
-
-// 	atualizaPc();
-// }
-
-// void laload(){
-// 	static int16_t countPos = 0;
-// 	char* tipo = "L";
-//     tipoGlobal = tipo;
-
-// 	int32_t indice = pop_op();
-
-// 	int32_t* referencia;
-// 	referencia = (int32_t*)pop_op();
-
-// 	push_pilha_operandos(referencia[countPos + indice+1]);
-// 	push_pilha_operandos(referencia[countPos + indice]);
-// 	countPos += 2;
-// 	atualizaPc();
-// }
-
-// void faload(){
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t* referencia;
-
-// 	int32_t indice = pop_op();
-
-// 	referencia = (int32_t*)pop_op();
-
-// 	int32_t valPilha;
-// 	memcpy(&valPilha, &((float *)referencia)[indice], sizeof(int32_t));
-// 	push_pilha_operandos(valPilha);
-
-// 	atualizaPc();
-// }
-
-// void daload(){
-// 	static int16_t countPos = 0;
-// 	char* tipo = "D";
-//     tipoGlobal = tipo;
-
-// 	int32_t indice = pop_op();
-
-// 	int32_t* referencia;
-// 	referencia = (int32_t*)pop_op();
-
-// 	push_pilha_operandos(referencia[countPos + indice+1]);
-// 	push_pilha_operandos(referencia[countPos + indice]);
-// 	countPos += 2;
-// 	atualizaPc();
-// }
-
-// void aaload(){
-
-// 	int32_t* referencia;
-
-// 	int32_t indice = pop_op();
-
-// 	referencia = (int32_t*)pop_op();
-
-// 	push_pilha_operandos(referencia[indice]);
-
-// 	atualizaPc();
-// }
-
-// void baload(){
-
-// 	int32_t* referencia;
-
-// 	int32_t indice = pop_op();
-
-// 	referencia = (int32_t*)pop_op();
-// 	int8_t* binary = (int8_t*)referencia[indice];
-
-// 	push_pilha_operandos((int32_t)binary);
-
-// 	atualizaPc();
-// }
-
-// void caload(){
-// 	char* tipo = "C";
-//     tipoGlobal = tipo;
-
-// 	int32_t* referencia;
-
-// 	int32_t indice = pop_op();
-
-// 	referencia = (int32_t*)pop_op();
-// 	int16_t* binary = (int16_t*)referencia[indice];
-
-// 	push_pilha_operandos((int32_t)binary);
-
-// 	atualizaPc();
-// }
-
-// void saload(){
-
-// 	int32_t* referencia;
-
-// 	int32_t indice = pop_op();
-
-// 	referencia = (int32_t*)pop_op();
-// 	int16_t* binary = (int16_t*)referencia[indice];
-
-// 	push_pilha_operandos((int32_t)binary);
-
-// 	atualizaPc();
-// }
-
-// void istore(){
-
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void lstore(){
-
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void fstore(){
-
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void dstore(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void astore(){
-
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void istore_0(){
-
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 0;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void istore_1(){
-//     uint32_t valor; 
-
-//     valor = pop_op();
-
-//     get_frame_atual()->fields[1] = valor;
-
-//     atualizaPc();
-// }
-
-// void istore_2(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 2;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void istore_3(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 3;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void lstore_0(){
-
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 0;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void lstore_1(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 1;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void lstore_2(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 2;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void lstore_3(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 3;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void fstore_0(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 0;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void fstore_1(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 1;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-// }
-
-// void fstore_2(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 2;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void fstore_3(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 3;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void dstore_0(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 0;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-// }
-
-// void dstore_1(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 1;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-
-// }
-
-// void dstore_2(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 2;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-
-// }
-
-// void dstore_3(){
-//     int32_t indice; 
-//     int32_t parte_alta, parte_baixa; 
-
-//     indice = 3;
-
-//     parte_baixa = pop_op();
-
-//     parte_alta = pop_op();
-
-//     get_frame_atual()->fields[indice + POS_ALTA] = parte_alta;
-//     get_frame_atual()->fields[indice + POS_BAIXA] = parte_baixa;
-
-//     atualizaPc();
-
-// }
-
-// void astore_0(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 0;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void astore_1(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 1;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void astore_2(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 2;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void astore_3(){
-//     int32_t indice; 
-//     int32_t valor; 
-
-//     indice = 3;
-
-//     valor = pop_op(); 
-
-//     get_frame_atual()->fields[indice] = valor; 
-
-//     atualizaPc();
-
-// }
-
-// void iastore(){
-
-// 	int32_t* ref;
-// 	int32_t indice,valor;
-
-// 	valor = pop_op();
-
-// 	indice = pop_op();
-
-// 	ref = (int32_t*)pop_op();
-
-// 	ref[indice] = valor;
-
-// 	atualizaPc();
-// }
-
-// void lastore(){
-// 	static int16_t countPos = 0;
-// 	int32_t alta,baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int32_t indice = pop_op();
-
-// 	int32_t* referencia;
-// 	referencia = (int32_t*) pop_op();
-
-// 	referencia[countPos + indice] = baixa;
-// 	referencia[countPos + indice + 1] = alta;
-// 	countPos += 2;
-// 	atualizaPc();
-// }
-
-// void fastore(){
-// 	char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t* ref;
-// 	int32_t indice,valor;
-
-// 	valor = pop_op();
-
-// 	indice = pop_op();
-
-// 	ref = (int32_t*)pop_op();
-
-// 	ref[indice] = valor;
-
-// 	atualizaPc();
-// }
-
-// void dastore(){
-// 	static int16_t countPos = 0;
-// 	int32_t alta,baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int32_t indice = pop_op();
-
-// 	int32_t* referencia;
-// 	referencia = (int32_t*) pop_op();
-
-// 	referencia[countPos + indice] = baixa;
-// 	referencia[countPos + indice + 1] = alta;
-// 	countPos += 2;
-// 	atualizaPc();
-// }
-
-// void aastore(){
-
-// 	int32_t* ref;
-// 	int32_t indice,valor;
-
-// 	valor = pop_op();
-
-// 	indice = pop_op();
-
-// 	ref = (int32_t*)pop_op();
-
-// 	ref[indice] = valor;
-
-// 	atualizaPc();
-// }
-
-// void bastore(){
-
-// 	int32_t* ref;
-// 	int32_t indice,valor;
-
-// 	valor = pop_op();
-
-// 	indice = pop_op();
-
-// 	ref = (int32_t*)pop_op();
-
-// 	ref[indice] = (int8_t)valor;
-
-// 	atualizaPc();
-// }
-
-// void castore(){
-
-// 	int32_t* ref;
-// 	int32_t indice,valor;
-
-// 	valor = pop_op();
-
-// 	indice = pop_op();
-
-// 	ref = (int32_t*)pop_op();
-
-// 	ref[indice] = (int16_t)valor;
-
-// 	atualizaPc();
-// }
-
-// void sastore(){
-
-// 	int32_t* ref;
-// 	int32_t indice,valor;
-
-// 	valor = pop_op();
-
-// 	indice = pop_op();
-
-// 	ref = (int32_t*)pop_op();
-
-// 	ref[indice] = (int16_t)valor;
-
-// 	atualizaPc();
-// }
-
-// void pop(){
-// 	pop_op();
-
-// 	atualizaPc();
-// }
-
-// void pop2(){
-
-// 	pop_op();
-// 	pop_op();
-
-// 	atualizaPc();
-// }
-
-// void dup(){
-// 	int32_t retPilha;
-
-// 	retPilha = pop_op();
-
-// 	push_pilha_operandos(retPilha);
-// 	push_pilha_operandos(retPilha);
-// 	atualizaPc();
-// }
-
-// void dup_x1(){
-// 	int32_t aux1, aux2;
-
-// 	aux1 = pop_op();
-
-// 	aux2 = pop_op();
-
-// 	push_pilha_operandos(aux1);
-
-// 	push_pilha_operandos(aux2);
-
-// 	push_pilha_operandos(aux1);
-
-// 	atualizaPc();
-// }
-
-// void dup_x2(){
-
-// 	int32_t aux1, aux2, aux3;
-
-// 	aux1 = pop_op();
-
-// 	aux2 = pop_op();
-
-// 	aux3 = pop_op();
-
-// 	push_pilha_operandos(aux1);
-// 	push_pilha_operandos(aux3);
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-
-// 	atualizaPc();
-
-// }
-
-// void dup2(){
-
-// 	int32_t aux1, aux2, aux3;
-
-// 	aux1 = pop_op();
-
-// 	aux2 = pop_op();
-
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-
-// 	atualizaPc();
-// }
-
-// void dup2_x1(){
-
-// 	int32_t aux1, aux2, aux3;
-
-// 	aux1 = pop_op();
-
-// 	aux2 = pop_op();
-
-// 	aux3 = pop_op();
-
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-// 	push_pilha_operandos(aux3);
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-
-// 	atualizaPc();
-
-// }
-
-// void dup2_x2(){
-
-// 	int32_t aux1, aux2, aux3, aux4;
-
-// 	aux1 = pop_op();
-
-// 	aux2 = pop_op();
-
-// 	aux3 = pop_op();
-
-// 	aux4 = pop_op();
-
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-// 	push_pilha_operandos(aux4);
-// 	push_pilha_operandos(aux3);
-// 	push_pilha_operandos(aux2);
-// 	push_pilha_operandos(aux1);
-
-// 	atualizaPc();
-// }
-
-// void swap(){
-// 	int32_t val1,val2;
-
-// 	val1 = pop_op();
-// 	val2 = pop_op();
-
-// 	push_pilha_operandos(val1);
-// 	push_pilha_operandos(val2);
-
-// 	atualizaPc();
-// }
-
-// void iadd(){
-// 	int32_t v1,v2;
-// 	v2 = pop_op();
-// 	v1 = pop_op();
-
-// 	push_pilha_operandos(v1+v2);
-
-// 	atualizaPc();
-// }
-
-// void ladd(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 + lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void fadd(){
-// 	float fVal1,fVal2;
-
-// 	int32_t aux1 = pop_op();
-// 	int32_t aux2 = pop_op();
-
-// 	memcpy(&fVal1, &aux1, sizeof(int32_t));
-// 	memcpy(&fVal2, &aux2, sizeof(int32_t));
-
-// 	float resultado = fVal1 + fVal2;
-
-// 	int32_t retPilha;
-// 	memcpy(&retPilha, &resultado, sizeof(int32_t));
-
-// 	push_pilha_operandos(retPilha);
-
-// 	atualizaPc();
-
-// }
-
-// void dadd(){
-
-// 	int32_t alta;
-// 	int32_t baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble1;
-// 	memcpy(&valorDouble1, &dVal, sizeof(int64_t));
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble2;
-// 	memcpy(&valorDouble2, &dVal, sizeof(int64_t));
-
-// 	double doubleSomado = valorDouble1 + valorDouble2;
-
-// 	int64_t valorPilha;
-// 	memcpy(&valorPilha, &doubleSomado, sizeof(int64_t));
-
-// 	alta = valorPilha >> 32;
-// 	baixa = valorPilha & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void isub(){
-// 	int32_t v1,v2;
-// 	v2 = pop_op();
-// 	v1 = pop_op();
-
-// 	push_pilha_operandos(v1-v2);
-
-// 	atualizaPc();
-
-// }
-
-// void lsub(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 - lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void fsub(){
-// 	float fVal1,fVal2;
-
-// 	int32_t aux2 = pop_op();
-// 	int32_t aux1 = pop_op();
-
-// 	memcpy(&fVal1, &aux1, sizeof(int32_t));
-// 	memcpy(&fVal2, &aux2, sizeof(int32_t));
-
-// 	float resultado = fVal1 - fVal2;
-
-// 	int32_t retPilha;
-// 	memcpy(&retPilha, &resultado, sizeof(int32_t));
-
-// 	push_pilha_operandos(retPilha);
-
-// 	atualizaPc();
-// }
-
-// void dsub(){
-
-// 	int32_t alta;
-// 	int32_t baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble1;
-// 	memcpy(&valorDouble1, &dVal, sizeof(int64_t));
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble2;
-// 	memcpy(&valorDouble2, &dVal, sizeof(int64_t));
-
-// 	double doubleSubtraido = valorDouble2 - valorDouble1;
-
-// 	int64_t valorPilha;
-// 	memcpy(&valorPilha, &doubleSubtraido, sizeof(int64_t));
-
-// 	alta = valorPilha >> 32;
-// 	baixa = valorPilha & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void imul(){
-// 	int32_t v1 = pop_op();
-// 	int32_t v2 = pop_op();
-
-// 	push_pilha_operandos((int32_t)(v1 * v2));
-
-// 	atualizaPc();
-// }
-
-// void lmul(){
-
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 * lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void fmul(){
-// 	float fVal1,fVal2;
-
-// 	int32_t aux1 = pop_op();
-// 	int32_t aux2 = pop_op();
-
-// 	memcpy(&fVal1, &aux1, sizeof(int32_t));
-// 	memcpy(&fVal2, &aux2, sizeof(int32_t));
-
-// 	float resultado = fVal1 * fVal2;
-
-// 	int32_t retPilha;
-// 	memcpy(&retPilha, &resultado, sizeof(int32_t));
-
-// 	push_pilha_operandos(retPilha);
-
-// 	atualizaPc();
-// }
-
-// void dmul(){
-
-// 	int32_t alta;
-// 	int32_t baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble1;
-// 	memcpy(&valorDouble1, &dVal, sizeof(int64_t));
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble2;
-// 	memcpy(&valorDouble2, &dVal, sizeof(int64_t));
-
-// 	double doubleMultiplicado = valorDouble1 * valorDouble2;
-
-// 	int64_t valorPilha;
-// 	memcpy(&valorPilha, &doubleMultiplicado, sizeof(int64_t));
-
-// 	alta = valorPilha >> 32;
-// 	baixa = valorPilha & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void idiv(){
-
-// 	int32_t v2 = pop_op();
-// 	int32_t v1 = pop_op();
-
-// 	push_pilha_operandos((int32_t)(v1 / v2));
-
-// 	atualizaPc();
-// }
-
-// void ins_ldiv(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 / lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void fdiv(){
-// 	float fVal1,fVal2;
-
-// 	int32_t aux2 = pop_op();
-// 	int32_t aux1 = pop_op();
-
-// 	memcpy(&fVal1, &aux1, sizeof(int32_t));
-// 	memcpy(&fVal2, &aux2, sizeof(int32_t));
-
-// 	float resultado = fVal1 / fVal2;
-
-// 	int32_t retPilha;
-// 	memcpy(&retPilha, &resultado, sizeof(int32_t));
-
-// 	push_pilha_operandos(retPilha);
-
-// 	atualizaPc();
-// }
-
-// void ddiv(){
-
-// 	int32_t alta,baixa,alta1,baixa1;
-
-// 	baixa1 = pop_op();
-// 	alta1 = pop_op();
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta1;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa1;
-
-// 	double v1;
-// 	memcpy(&v1, &dVal, sizeof(double));
-
-// 	dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double v2;
-// 	memcpy(&v2, &dVal, sizeof(double));
-
-// 	double resultado = v2 / v1;
-
-// 	int64_t pilhaVal;
-// 	memcpy(&pilhaVal, &resultado, sizeof(int64_t));
-
-// 	alta = pilhaVal >> 32;
-// 	baixa = pilhaVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void irem(){
-
-// 	int32_t v2 = pop_op();
-// 	int32_t v1 = pop_op();
-
-// 	push_pilha_operandos((int32_t)(v1 % v2));
-
-// 	atualizaPc();
-// }
-
-// void lrem(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 % lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void frem(){
-// 	float fVal1,fVal2;
-
-// 	int32_t aux2 = pop_op();
-// 	int32_t aux1 = pop_op();
-
-// 	memcpy(&fVal1, &aux1, sizeof(int32_t));
-// 	memcpy(&fVal2, &aux2, sizeof(int32_t));
-
-// 	float resultado = fmodf(fVal1,fVal2);
-
-// 	int32_t retPilha;
-// 	memcpy(&retPilha, &resultado, sizeof(int32_t));
-
-// 	push_pilha_operandos(retPilha);
-
-// 	atualizaPc();
-// }
-
-// void _drem(){
-
-// 	int32_t alta,baixa,alta1,baixa1;
-
-// 	baixa1 = pop_op();
-// 	alta1 = pop_op();
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta1;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa1;
-
-// 	double v1;
-// 	memcpy(&v1, &dVal, sizeof(double));
-
-// 	dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double v2;
-// 	memcpy(&v2, &dVal, sizeof(double));
-
-// 	double resultado = fmod(v2,v1);
-
-// 	int64_t pilhaVal;
-// 	memcpy(&pilhaVal, &resultado, sizeof(int64_t));
-
-// 	alta = pilhaVal >> 32;
-// 	baixa = pilhaVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-
-// }
-
-// void ineg(){
-
-// 	int32_t retPilha = pop_op();
-
-// 	int32_t aux = -retPilha;
-
-// 	push_pilha_operandos(aux);
-
-// 	atualizaPc();
-// }
-
-// void lneg(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal | baixa;
-
-// 	lVal = - lVal;
-
-// 	alta = lVal >> 32;
-// 	baixa = lVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-//     foi_lneg = true;
-// }
-
-// void fneg(){
-// 	float fVal;
-
-// 	int32_t retPilha = pop_op();
-
-// 	memcpy(&fVal,&retPilha,sizeof(float));
-
-// 	fVal = - fVal;
-
-// 	memcpy(&retPilha,&fVal,sizeof(int32_t));
-
-// 	push_pilha_operandos(retPilha);
-
-// 	atualizaPc();
-// }
-
-// void dneg(){
-
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double valorDouble1;
-// 	memcpy(&valorDouble1, &dVal, sizeof(int64_t));
-
-// 	valorDouble1 = - valorDouble1;
-
-// 	memcpy(&dVal, &valorDouble1, sizeof(int64_t));
-
-// 	alta = dVal >> 32;
-// 	baixa = dVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void ishl(){
-
-// 	int32_t shift = pop_op();
-// 	shift = shift & 0x1f;
-
-// 	int32_t sVal = pop_op();
-// 	sVal = sVal << shift;
-// 	push_pilha_operandos(sVal);
-
-// 	atualizaPc();
-// }
-
-// void lshl(){
-
-// 	int32_t shift = pop_op();
-// 	shift = shift & 0x3f;
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	lVal = lVal << shift;
-
-// 	alta = lVal >> 32;
-// 	baixa = lVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void ishr(){
-
-// 	int32_t shift = pop_op();
-// 	shift = shift & 0x1f;
-
-// 	int32_t sVal = pop_op();
-
-// 	int32_t i = 0;
-// 	while(i < shift){
-// 		sVal = sVal / 2;
-// 		i += 1;
-// 	}
-
-// 	push_pilha_operandos(sVal);
-
-// 	atualizaPc();
-// }
-
-// void lshr(){
-
-//     int32_t v2 = pop_op();
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-// 	int64_t lVal = alta;
-// 	lVal <<= 32;
-// 	lVal = lVal + baixa;
-
-//     lVal = lVal << v2;
-
-// 	alta = lVal >> 32;
-// 	baixa = lVal & 0xffffffff;
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void iushr(){
-
-// 	int32_t shift = pop_op();
-// 	shift = shift & 0x1f;
-
-// 	int32_t sVal = pop_op();
-// 	sVal = sVal >> shift;
-// 	push_pilha_operandos(sVal);
-
-// 	atualizaPc();
-// }
-
-// void lushr(){
-
-// 	int32_t shift = pop_op();
-// 	shift = shift & 0x3f;
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	lVal = lVal >> shift;
-
-// 	alta = lVal >> 32;
-// 	baixa = lVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void iand(){
-// 	int32_t pop1 = pop_op();
-
-// 	int32_t pop2 = pop_op();
-
-// 	int32_t aux = pop1 & pop2;
-
-// 	push_pilha_operandos(aux);
-
-// 	get_frame_atual()->pc++;
-// }
-
-// void land(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 & lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void ior(){
-// 	int32_t pop1 = pop_op();
-
-// 	int32_t pop2 = pop_op();
-
-// 	int32_t aux = pop1 | pop2;
-
-// 	push_pilha_operandos(aux);
-
-// 	get_frame_atual()->pc++;
-
-// }
-
-// void lor(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 | lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	inicializa_decodificador(dec);
-// 	int num_bytes = dec[get_frame_atual()->code[get_frame_atual()->pc]].bytes;
-
-// 	atualizaPc();
-// }
-
-// void ixor(){
-// 	int32_t pop1 = pop_op();
-
-// 	int32_t pop2 = pop_op();
-
-// 	int32_t aux = pop1 ^ pop2;
-
-// 	push_pilha_operandos(aux);
-
-// 	get_frame_atual()->pc++;
-
-// }
-
-// void lxor(){
-// 	int32_t baixa,alta;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal1 = alta;
-
-// 	lVal1 <<= 32;
-
-// 	lVal1 = lVal1 + baixa;
-
-// 	int64_t resultado = lVal1 ^ lVal;
-
-// 	alta = resultado >> 32;
-// 	baixa = resultado & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void iinc(){
-
-// 	int8_t field = get_frame_atual()->code[get_frame_atual()->pc + 1];
-
-// 	int32_t value = get_frame_atual()->fields[field];
-
-// 	int8_t constant = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	int8_t sumVal = (int8_t) value;
-// 	sumVal = sumVal + constant;
-
-// 	get_frame_atual()->fields[field] = (int32_t) sumVal;
-
-// 	atualizaPc();
-// }
-
-// void i2l(){
-//     char* tipo = "L";
-//     tipoGlobal = tipo;
-//     int32_t alta, baixa;
-
-//     int32_t val = pop_op();
-
-//     int64_t long_num = (int64_t) val;
-// 	alta = long_num >> 32;
-// 	baixa = long_num & 0xffffffff;
-
-//     push_pilha_operandos(alta);
-//     push_pilha_operandos(baixa);
-
-//     atualizaPc();
-// }
-
-// void i2f(){
-//     char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t val = (int32_t) pop_op();
-
-// 	float valF = (float) val;
-
-// 	int32_t valPilha;
-// 	memcpy(&valPilha, &valF, sizeof(int32_t));
-
-// 	push_pilha_operandos(valPilha);
-
-// 	atualizaPc();
-// }
-
-// void i2d(){
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-// 	int32_t retPilha = pop_op();
-
-// 	double dVal = (double) retPilha;
-
-// 	int64_t pilhaVal;
-
-// 	memcpy(&pilhaVal, &dVal, sizeof(int64_t));
-
-// 	int32_t alta;
-// 	int32_t baixa;
-
-// 	alta = pilhaVal >> 32;
-
-// 	baixa = pilhaVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void l2i(){
-//     char* tipo = "I";
-//     tipoGlobal = tipo;
-// 	int32_t alta,baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	push_pilha_operandos(baixa);
-// 	atualizaPc();
-// }
-
-// void l2f(){
-//     char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal | baixa;
-
-// 	float fVal;
-//     fVal = (float) lVal; 
-
-// 	int32_t valPilha;
-// 	memcpy(&valPilha, &fVal, sizeof(int32_t));
-
-// 	push_pilha_operandos(valPilha);
-
-// 	atualizaPc();
-// }
-
-// void l2d(){
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	double dVal;
-// 	memcpy(&dVal, &lVal, sizeof(double));
-
-// 	int64_t valorPilha;
-// 	memcpy(&valorPilha, &dVal, sizeof(int64_t));
-
-// 	alta = valorPilha >> 32;
-// 	baixa = valorPilha & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void f2i(){
-//     char* tipo = "I";
-//     tipoGlobal = tipo;
-
-// 	int32_t retPilha = pop_op();
-
-// 	float fVal;
-// 	memcpy(&fVal, &retPilha, sizeof(int32_t));
-// 	push_pilha_operandos((int32_t)fVal);
-// 	atualizaPc();
-// }
-
-// void f2l(){
-//     char* tipo = "L";
-//     tipoGlobal = tipo;
-
-// 	int32_t retPilha = pop_op();
-// 	float fVal;
-
-// 	memcpy(&fVal, &retPilha, sizeof(int32_t));
-
-// 	int64_t lVal = (int64_t) fVal;
-
-// 	int32_t alta;
-// 	int32_t baixa;
-
-// 	alta = lVal >> 32;
-
-// 	baixa = lVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void f2d(){
-//     char* tipo = "D";
-//     tipoGlobal = tipo;
-
-// 	int32_t retPilha = pop_op();
-// 	float fVal;
-
-// 	memcpy(&fVal, &retPilha, sizeof(int32_t));
-
-// 	double dVal = (double) fVal;
-
-// 	int64_t pilhaVal;
-// 	memcpy(&pilhaVal, &dVal, 2*sizeof(int32_t));
-
-// 	int32_t alta;
-// 	int32_t baixa;
-
-// 	alta = pilhaVal >> 32;
-
-// 	baixa = pilhaVal & 0xffffffff;
-
-// 	push_pilha_operandos(alta);
-// 	push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void d2i(){
-//     char* tipo = "I";
-//     tipoGlobal = tipo;
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double v1;
-// 	memcpy(&v1, &dVal, sizeof(double));
-
-// 	push_pilha_operandos((int32_t)v1);
-// 	atualizaPc();
-// }
-
-// void d2l(){
-//     char* tipo = "L";
-//     tipoGlobal = tipo;
-
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double v1;
-// 	memcpy(&v1, &dVal, sizeof(double));
-
-//     int64_t long_num = (int64_t) v1;
-// 	alta = long_num >> 32;
-// 	baixa = long_num & 0xffffffff;
-
-//     push_pilha_operandos(alta);
-//     push_pilha_operandos(baixa);
-
-// 	atualizaPc();
-// }
-
-// void d2f(){
-//     char* tipo = "F";
-//     tipoGlobal = tipo;
-
-// 	int32_t alta,baixa;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double v1;
-// 	memcpy(&v1, &dVal, sizeof(double));
-
-// 	float fVal = (float) v1;
-
-// 	int32_t pilhaVal;
-// 	memcpy(&pilhaVal,&fVal,sizeof(float));
-
-// 	push_pilha_operandos(pilhaVal);
-
-// 	atualizaPc();
-// }
-
-// void i2b(){
-
-// 	int32_t valPilha = pop_op();
-
-// 	int8_t bVal = (int8_t) valPilha;
-
-// 	push_pilha_operandos((int32_t) bVal);
-// 	atualizaPc();
-// }
-
-// void i2c(){
-//     char* tipo = "C";
-//     tipoGlobal = tipo;
-
-// 	int32_t valPilha = pop_op();
-
-// 	int16_t cVal = (int16_t) valPilha;
-
-// 	push_pilha_operandos((int32_t) cVal);
-// 	atualizaPc();
-// }
-
-// void i2s(){
-
-// 	int32_t valPilha = pop_op();
-
-// 	int16_t cVal = (int16_t) valPilha;
-
-// 	push_pilha_operandos((int32_t) cVal);
-// 	atualizaPc();
-// }
-
-// void lcmp(){
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal = alta;
-
-// 	lVal <<= 32;
-
-// 	lVal = lVal + baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t lVal2 = alta;
-
-// 	lVal2 <<= 32;
-
-// 	lVal2 = lVal2 + baixa;
-
-// 	if(lVal2 == lVal){
-// 		push_pilha_operandos((int32_t)0);
-// 	}
-// 	else if(lVal2 > lVal){
-// 		push_pilha_operandos((int32_t)1);
-// 	}
-// 	else if(lVal2 < lVal){
-// 		push_pilha_operandos((int32_t)-1);
-// 	}
-
-// 	atualizaPc();
-// }
-
-// void fcmpl(){
-
-// 	float val1,val2;
-
-// 	int32_t retPilha;
-
-// 	retPilha = pop_op();
-
-// 	memcpy(&val2,&retPilha,sizeof(float));
-
-// 	retPilha = pop_op();
-
-// 	memcpy(&val1,&retPilha,sizeof(float));
-
-// 	if(val1 == val2){
-// 		push_pilha_operandos((int32_t)0);
-// 	}
-// 	else if(val1 > val2){
-// 		push_pilha_operandos((int32_t)1);
-// 	}
-// 	else if(val1 < val2){
-// 		push_pilha_operandos((int32_t)-1);
-// 	}
-// 	else{
-// 		printf("NaN!!\n");
-// 		push_pilha_operandos((int32_t)-1);
-// 	}
-
-// 	atualizaPc();
-// }
-
-// void fcmpg(){
-
-// 	float val1,val2;
-
-// 	int32_t retPilha;
-
-// 	retPilha = pop_op();
-
-// 	memcpy(&val2,&retPilha,sizeof(float));
-
-// 	retPilha = pop_op();
-
-// 	memcpy(&val1,&retPilha,sizeof(float));
-
-// 	if(val1 == val2){
-// 		push_pilha_operandos((int32_t)0);
-// 	}
-// 	else if(val1 > val2){
-// 		push_pilha_operandos((int32_t)1);
-// 	}
-// 	else if(val1 < val2){
-// 		push_pilha_operandos((int32_t)-1);
-// 	}
-// 	else{
-// 		printf("NaN!!\n");
-// 		push_pilha_operandos((int32_t)1);
-// 	}
-
-// 	atualizaPc();
-// }
-
-// void dcmpl(){
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double doubleCmpl;
-// 	memcpy(&doubleCmpl, &dVal, sizeof(double));
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal2 = alta;
-
-// 	dVal2 <<= 32;
-
-// 	dVal2 = dVal2 + baixa;
-
-// 	double doubleCmpl2;
-// 	memcpy(&doubleCmpl2, &dVal2, sizeof(double));
-
-// 	if(doubleCmpl2 > doubleCmpl){
-// 		push_pilha_operandos((int32_t)1);
-// 	}
-// 	else if(doubleCmpl2 == doubleCmpl){
-// 		push_pilha_operandos((int32_t)0);
-// 	}
-// 	else if(doubleCmpl2 < doubleCmpl){
-// 		push_pilha_operandos((int32_t)-1);
-// 	}
-// 	else{
-// 		printf("NaN!\n");
-// 		push_pilha_operandos((int32_t) -1);
-// 	}
-
-// 	atualizaPc();
-// }
-
-// void dcmpg(){
-// 	int32_t baixa,alta;
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal = alta;
-
-// 	dVal <<= 32;
-
-// 	dVal = dVal + baixa;
-
-// 	double doubleCmpl;
-// 	memcpy(&doubleCmpl, &dVal, sizeof(double));
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	int64_t dVal2 = alta;
-
-// 	dVal2 <<= 32;
-
-// 	dVal2 = dVal2 + baixa;
-
-// 	double doubleCmpl2;
-// 	memcpy(&doubleCmpl2, &dVal2, sizeof(double));
-
-// 	if(doubleCmpl2 > doubleCmpl){
-// 		push_pilha_operandos((int32_t)1);
-// 	}
-// 	else if(doubleCmpl2 == doubleCmpl){
-// 		push_pilha_operandos((int32_t)0);
-// 	}
-// 	else if(doubleCmpl2 < doubleCmpl){
-// 		push_pilha_operandos((int32_t)-1);
-// 	}
-// 	else{
-// 		printf("NaN!\n");
-// 		push_pilha_operandos((int32_t) 1);
-// 	}
-
-// 	atualizaPc();
-// }
-
-// void ifeq(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha == 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void ifne(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha != 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void iflt(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha < 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void ifge(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha >= 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void ifgt(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha > 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void ifle(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha <= 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_icmpeq(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha1 == retPilha2){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_icmpne(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha1 != retPilha2){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_icmplt(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha2 < retPilha1){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_icmpge(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha2 >= retPilha1){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_icmpgt(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha2 > retPilha1){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_icmple(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha2 <= retPilha1){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_acmpeq(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha2 == retPilha1){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void if_acmpne(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha1 = pop_op();
-// 	int32_t retPilha2 = pop_op();
-
-// 	if(retPilha2 != retPilha1){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void ins_goto(){
-
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	get_frame_atual()->pc += offset;
-// }
-
-// void jsr(){
-
-// 	push_pilha_operandos(get_frame_atual()->pc+3);
-
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	get_frame_atual()->pc += offset;
-// }
-
-// void ret(){
-
-// }
-
-// void tableswitch(){
-//     uint32_t bytes_preench; 
-//     int32_t indice;
-//     int32_t default_v, low, high, npairs; 
-//     uint32_t pc_novo, pc_aux;
-//     int32_t qtd_offset, offset, posicao;
-//     uint32_t temp;
-
-//     bool definido = false; 
-
-//     pc_aux = get_frame_atual()->pc; 
-
-//     indice = pop_op(); 
-
-//     bytes_preench = (4 - ((pc_aux + 1) % 4) ) % 4;  
-//     pc_aux += bytes_preench;
-//     pc_aux++;
-
-//     default_v = 0;
-//     for (int l = 0; l < 4; l++)
-//     {
-//         default_v = (default_v << 8) + get_frame_atual()->code[pc_aux];   
-//         pc_aux++;
-//     }       
-
-//     low = 0;
-//     for (int l = 0; l < 4; l++)
-//     {
-//         low = (low << 8) + get_frame_atual()->code[pc_aux];   
-//         pc_aux++; 
-//     }       
-
-//     if (indice < low && !definido)
-//     {
-//         definido = true;
-//         pc_novo = get_frame_atual()->pc + default_v; 
-//     }
-
-//     high = 0;
-//     for (int l = 0; l < 4; l++)
-//     {
-//         high = (high << 8) + get_frame_atual()->code[pc_aux];   
-//         pc_aux++; 
-//     }       
-
-//     if (indice > high && !definido)
-//     {
-//         definido = true;
-//         pc_novo = get_frame_atual()->pc + default_v; 
-//     }
-
-//     qtd_offset = 1 + high - low; 
-//     posicao = indice - low; 
-//     for (int32_t l = 0; l < qtd_offset; l++)
-//     {
-
-//         if (l == posicao)
-//         {
-
-//             offset = 0;
-//             for (int i = 0; i < 4; i++)
-//             {
-//                 offset = (offset << 8) + get_frame_atual()->code[pc_aux];   
-//                 pc_aux++; 
-//             }       
-
-//             pc_novo = get_frame_atual()->pc + offset; 
-//             definido = true;
-
-//             break;
-//         }
-
-//         else
-//         {
-//             for (int i = 0; i < 4; i++)
-//             {
-//                 pc_aux++; 
-//             }       
-//         }
-//     }
-
-//     get_frame_atual()->pc = pc_novo; 
-// }
-
-// void lookupswitch(){
-//     uint32_t pc_aux, pc_novo; 
-//     uint32_t bytes_preench;
-//     uint32_t offset;
-//     int32_t default_v, npairs; 
-//     int32_t match; 
-//     int32_t key;
-
-//     bool definido = false; 
-
-//     pc_aux = get_frame_atual()->pc; 
-
-//     key = pop_op(); 
-
-//     bytes_preench = (4 - ((pc_aux + 1) % 4) ) % 4;  
-
-//     pc_aux += bytes_preench;
-//     pc_aux++;
-
-//     default_v = 0;
-//     for (int l = 0; l < 4; l++)
-//     {
-//         default_v = (default_v << 8) + get_frame_atual()->code[pc_aux];   
-//         pc_aux++;
-//     }       
-
-//     npairs = 0;
-//     for (int l = 0; l < 4; l++)
-//     {
-//         npairs = (npairs << 8) + get_frame_atual()->code[pc_aux];   
-//         pc_aux++;
-//     }       
-
-//     for (int32_t l = 0; l < npairs; l++)
-//     {
-
-//         match = 0;
-//         for (int l = 0; l < 4; l++)
-//         {
-//             match = (match << 8) + get_frame_atual()->code[pc_aux];   
-//             pc_aux++;
-//         }       
-
-//         if (key == match)
-//         {
-
-//             offset = 0;
-//             for (int l = 0; l < 4; l++)
-//             {
-//                 offset = (offset << 8) + get_frame_atual()->code[pc_aux];   
-//                 pc_aux++;
-//             }       
-
-//             pc_novo = get_frame_atual()->pc + offset; 
-
-//             definido = true;
-//         }
-
-//         else
-//         {
-
-//             for(int i = 0; i < 4; i++)
-//             {
-//                 pc_aux++;
-//             }
-//         }
-//      }
-
-//     if (!definido)
-//     {
-//         pc_novo = get_frame_atual()->pc + default_v;
-//     }
-
-//     get_frame_atual()->pc = pc_novo; 
-// }
-
-// void ireturn(){
-//     retorno = pop_op();
-// 	flagRet = 1;
-
-//     get_frame_atual()->pc = get_frame_atual()->code_length + 1;
-// }
-
-// void lreturn(){
-// 	int32_t alta,baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	flagRet = 2;
-
-// 	retAlta = alta;
-// 	retBaixa = baixa;
-
-//     get_frame_atual()->pc = get_frame_atual()->code_length + 1;
-// }
-
-// void freturn(){
-// 	retorno = pop_op();
-// 	flagRet = 1;
-
-//     get_frame_atual()->pc = get_frame_atual()->code_length + 1;
-// }
-
-// void dreturn(){
-// 	int32_t alta,baixa;
-
-// 	baixa = pop_op();
-// 	alta = pop_op();
-
-// 	flagRet = 2;
-
-// 	retAlta = alta;
-// 	retBaixa = baixa;
-
-//     get_frame_atual()->pc = get_frame_atual()->code_length + 1;
-// }
-
-// void areturn(){
-// 	retorno = pop_op();
-// 	flagRet = 1;
-
-//     get_frame_atual()->pc = get_frame_atual()->code_length + 1;
-// }
-
-// void ins_return(){
-
-// 	retorno = 0;
-// 	flagRet = 0;
-
-// 	atualizaPc();
-// }
-
-// void getstatic(){
-
-//     get_frame_atual()->pilha_op->depth += 1;
-
-// 	atualizaPc();
-// }
-
-// void putstatic(){
-
-// }
-
-// void getfield(){
-
-// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	int32_t indiceClasse = get_frame_atual()->constant_pool[indice-1].info.Fieldref.class_index;
-
-// 	char* nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[indiceClasse-1].info.Class.name_index);
-
-// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Fieldref.name_and_type_index;
-
-// 	char* nome = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.name_index);
-// 	char* tipo = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.descriptor_index);
-// 	tipoGlobal = tipo;
-
-//  	if((strcmp(tipo, "Ljava/util/Scanner;") == 0)){
-//  		atualizaPc();
-// 		return;
-//  	}
-
-//  	objeto* obj = (objeto*) pop_op();
-
-//  	int32_t indiceField = buscaCampo(nomeClasse,nome,tipo);
-
-//  	uint32_t indiceNome = get_frame_atual()->classe->fields[indiceField].name_index;
-
-//  	if(tipo[0] == 'J' || tipo[0] == 'D') {
-//  		int32_t i;
-// 		for(i = 0;obj->indiceCampos[i] != indiceNome; i++);
-
-// 		int32_t baixa = obj->campos[i];
-// 		int32_t alta = obj->campos[i+1];
-
-// 		push_pilha_operandos(alta);
-// 		push_pilha_operandos(baixa);
-// 		atualizaPc();
-//  	}
-//  	else{
-
-// 	 	int32_t i;
-// 		for(i = 0;obj->indiceCampos[i] != indiceNome; i++);
-
-// 	 	uint32_t val = obj->campos[i];
-
-// 	 	push_pilha_operandos(val);
-
-// 		atualizaPc();
-// 	}
-// }
-
-// void putfield(){
-
-// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	int32_t indiceClasse = get_frame_atual()->constant_pool[indice-1].info.Fieldref.class_index;
-
-// 	char* nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[indiceClasse-1].info.Class.name_index);
-
-// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Fieldref.name_and_type_index;
-
-// 	char* nome = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.name_index);
-// 	char* tipo = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.descriptor_index);
-
-//  	int32_t indiceField = buscaCampo(nomeClasse,nome,tipo);
-
-//  	uint32_t indiceNome = get_frame_atual()->classe->fields[indiceField].name_index;
-
-//  	if(tipo[0] == 'J' || tipo[0] == 'D') {
-//  		int32_t alta,baixa;
-//  		int32_t val1 = pop_op();
-//  		int32_t val2 = pop_op();
-//  		objeto* obj = (objeto*)pop_op();
-
-// 		int64_t dVal = val2;
-
-// 		dVal <<= 32;
-
-// 		dVal = dVal + val1;
-
-// 		double valorDouble1;
-// 		memcpy(&valorDouble1, &dVal, sizeof(int64_t));
-
-// 		int i;
-// 		for(i = 0; obj->indiceCampos[i] != indiceNome; i++);
-
-// 		int64_t valorPilha;
-// 		memcpy(&valorPilha, &valorDouble1, sizeof(int64_t));
-
-// 		alta = valorPilha >> 32;
-// 		baixa = valorPilha & 0xffffffff;
-// 		obj->campos[i] = baixa;
-// 		obj->campos[i+1] = alta;
-//  	}
-//  	else{
-// 	 	int32_t val = pop_op();
-// 	 	objeto* obj = (objeto*)pop_op();
-// 	 	int i;
-// 	 	for(i = 0; obj->indiceCampos[i] != indiceNome; i++);
-// 		obj->campos[i] = val;
-// 	}
-
-// 	atualizaPc();
-// }
-
-// void invokevirtual(){
-// 	method_info* metodoInvocado;
-//     char* nomeClasse;
-//     char* nomeMetodo;
-//     char* descricaoMetodo;
-//     uint16_t nomeMetodoAux, descricaoMetodoAux,nomeTipoAux,stringAux;
-//     int32_t resultado,resultado2, resultado_string;
-//     int32_t classeIndice;
-//     uint8_t* string = NULL;
-//     static int8_t flagAppend = 0;
-
-//     uint32_t pcAux = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-//     classeIndice = get_frame_atual()->constant_pool[pcAux - 1].info.Methodref.class_index;
-
-//     nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[classeIndice - 1].info.Class.name_index);
-//     nomeTipoAux = get_frame_atual()->constant_pool[pcAux - 1].info.Methodref.name_and_type_index;
-
-//     nomeMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.name_index;
-
-// 	descricaoMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.descriptor_index;
-
-//     nomeMetodo = retornaNome(get_frame_atual()->classe, nomeMetodoAux);
-
-//     descricaoMetodo = retornaNome(get_frame_atual()->classe, descricaoMetodoAux);
-
-//     if((strcmp(nomeClasse, "java/lang/StringBuffer") == 0) && (strcmp(nomeMetodo,"append") == 0)){
-// 			flagAppend++;
-// 		    foi_lneg = false;
-// 			atualizaPc();
-// 			return;
-// 	}
-
-// 	if((strcmp(nomeClasse, "java/lang/StringBuffer") == 0) && (strcmp(nomeMetodo,"toString") == 0)){
-// 		    foi_lneg = false;
-// 			atualizaPc();
-// 			return;
-// 	}
-
-// 	if((strcmp(nomeClasse, "java/util/Scanner") == 0) && (strcmp(nomeMetodo,"next") == 0)){
-// 		int32_t aux;
-// 		scanf("%d",&aux);
-// 		push_pilha_operandos(aux);
-// 		foi_lneg = false;
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	if((strcmp(nomeClasse, "java/io/PrintStream") == 0) && (strcmp(nomeMetodo,"println") == 0)){
-//         if (strcmp(descricaoMetodo, "()V") == 0)
-//         {
-//             printf("\n");
-//         }
-
-//         else if (flagAppend == 0)
-//         {
-//             resultado = pop_op();
-
-//             if (tipoGlobal == NULL)
-//             {
-//                 string = get_frame_atual()->constant_pool[resultado].info.Utf8.bytes;
-//             }
-
-//             if (string != NULL) {
-//                 printf("%s\n",string);
-//             }
-//             else if(strcmp(tipoGlobal, "Z") == 0)
-//             {
-//                 if(resultado){
-//                 	printf("TRUE\n");
-//                 }else{
-//                 	printf("FALSE\n");
-//                 }
-//             }
-//             else if(strcmp(tipoGlobal, "F") == 0)
-//             {
-//                 float valDesemp;
-//                 memcpy(&valDesemp, &resultado, sizeof(float));
-//                 printf("%f\n",valDesemp);
-//             }
-
-//             else if(strcmp(tipoGlobal, "D") == 0)
-//             {
-//                 resultado2 = pop_op();
-//                 double resultado_double; 
-//                 int64_t temp; 
-
-//                 temp = resultado2;
-//                 temp <<= 32;
-//                 temp += resultado; 
-//                 memcpy(&resultado_double, &temp, sizeof(int64_t));
-//                 printf("%f\n", resultado_double);
-//             }
-
-//             else if(strcmp(tipoGlobal, "L") == 0)
-//             {
-//                 resultado2 = pop_op();
-//                 int64_t long_num; 
-//                 long long result;
-
-//                 long_num= resultado2;
-//                 long_num <<= 32;
-//                 long_num |= resultado; 
-
-//                 memcpy(&result, &long_num, sizeof(long));
-//                 foi_lneg = false;
-//                 if (!foi_lneg)
-//                 {
-//                     printf("%" PRId64 "\n", long_num);
-//                 }
-//                 else
-//                 {
-//                     printf("%" PRId64 "\n", result);
-//                 }
-//             }
-
-//             else if (strcmp(tipoGlobal, "I") == 0)
-//             {
-//                 printf("%d\n", resultado);
-//             }
-
-//             else if (strcmp(tipoGlobal, "C") == 0)
-//             {
-//                 printf("%c\n", resultado);
-//             }
-
-//             else
-//             {
-//                 printf("erro no invoke_virtual, tipoGlobal ainda nao setado");
-//                 exit(1);
-//             }
-//         }
-
-//         else if (flagAppend == 2)
-//         {
-//             if(strcmp(tipoGlobal, "F") == 0)
-//             {
-//                 resultado = pop_op();
-//                 resultado_string = pop_op();
-
-//                 string = get_frame_atual()->constant_pool[resultado_string].info.Utf8.bytes;
-//                 if (string != NULL)
-//                 {
-//                     printf("%s",string);
-//                 }
-
-//                 float valDesemp;
-//                 memcpy(&valDesemp,&resultado, sizeof(float));
-//                 printf("%f\n",valDesemp);
-//             }
-
-//             else if(strcmp(tipoGlobal, "I") == 0)
-//             {
-//                 resultado = pop_op();
-//                 resultado_string = pop_op();
-
-//                 string = get_frame_atual()->constant_pool[resultado_string].info.Utf8.bytes;
-//                 if (string != NULL)
-//                 {
-//                     printf("%s",string);
-//                 }
-//                 printf("%d\n", resultado);
-//             }
-
-//             else if(strcmp(tipoGlobal, "D") == 0)
-//             {
-//                 resultado = pop_op();
-//                 resultado2 = pop_op();
-//                 resultado_string = pop_op();
-
-//                 double resultado_double; 
-//                 int64_t temp; 
-
-//                 temp = resultado2;
-//                 temp <<= 32;
-//                 temp += resultado; 
-
-//                 if (string != NULL)
-//                 {
-//                     printf("%s",string);
-//                 }
-
-//                 memcpy(&resultado_double, &temp, sizeof(int64_t));
-//                 printf("%lf\n", resultado_double);
-//             }
-
-//             else
-//             {
-//                 printf("tipoGlobal ainda nao reconhecido");
-//                 exit(1);
-//             }
-
-//             flagAppend = 0;
-//         }
-//         else{
-//         	return;
-//         }
-
-//         foi_lneg = false;
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	classeIndice = carregaMemClasse(nomeClasse);
-// 	classFile* classe = buscaClasseIndice(classeIndice);
-
-// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoAux);
-// 	if(metodoInvocado == NULL){
-// 		printf("Método não Encontrado!\n");
-// 		exit(0);
-// 	}
-
-// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
-
-// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
-
-// 	for(int32_t i = 0; i <= numeroParametros; i++){
-// 		fields[i] = pop_op();
-// 	}
-
-// 	empilhaMetodo(metodoInvocado, classe);
-
-// 	for(int32_t i = 0; i <= numeroParametros; i++) {
-// 			get_frame_atual()->fields[i] = fields[numeroParametros - i];
-// 	}
-
-// 	executaget_frame_atual()();
-
-// 	foi_lneg = false;
-// 	atualizaPc();
-// 	return;
-// }
-
-// void invokespecial(){
-// 	method_info* metodoInvocado;
-
-// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	uint32_t indiceClasse = (get_frame_atual()->constant_pool[indice-1]).info.Methodref.class_index;
-
-// 	char* nomeClasse = retornaNome(get_frame_atual()->classe,(get_frame_atual()->constant_pool[indiceClasse-1]).info.Class.name_index);
-
-//     if(strcmp("java/lang/Object",nomeClasse) == 0){
-
-// 		carregaMemClasse(nomeClasse);
-
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	if(strcmp("java/lang/StringBuffer",nomeClasse) == 0){
-
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	if(strcmp("java/util/Scanner",nomeClasse) == 0){
-
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	int32_t indexClasse = carregaMemClasse(nomeClasse);
-
-// 	classFile* classe = buscaClasseIndice(indexClasse);
-
-// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Methodref.name_and_type_index;
-
-// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoIndice);
-
-// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
-
-// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
-
-// 	for(int32_t i = 0; i <= numeroParametros; i++){
-// 		fields[i] = pop_op();
-// 	}
-
-// 	empilhaMetodo(metodoInvocado, classe);
-
-// 	for(int32_t i = 0; i <= numeroParametros; i++) {
-// 			get_frame_atual()->fields[i] = fields[numeroParametros - i];
-// 	}
-
-// 	executaget_frame_atual()();
-
-// 	atualizaPc();
-// }
-
-// void invokestatic(){
-
-// 	method_info* metodoInvocado;
-
-//     char* nomeMetodo;
-//     char* descricaoMetodo;
-//     uint16_t nomeMetodoAux, descricaoMetodoAux,nomeTipoAux,stringAux;
-
-// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	uint32_t indiceClasse = (get_frame_atual()->constant_pool[indice-1]).info.Methodref.class_index;
-
-// 	char* nomeClasse = retornaNome(get_frame_atual()->classe,(get_frame_atual()->constant_pool[indiceClasse-1]).info.Class.name_index);
-
-// 	nomeTipoAux = get_frame_atual()->constant_pool[indice - 1].info.Methodref.name_and_type_index;
-
-//     nomeMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.name_index;
-
-// 	descricaoMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.descriptor_index;
-
-//     nomeMetodo = retornaNome(get_frame_atual()->classe, nomeMetodoAux);
-
-//     descricaoMetodo = retornaNome(get_frame_atual()->classe, descricaoMetodoAux);
-
-// 	if((strcmp(nomeClasse, "java/lang/System") == 0) && (strcmp(nomeMetodo,"exit") == 0)){
-// 		if(strstr(descricaoMetodo, "(I)V") != NULL) {
-// 			int32_t retPilha = pop_op();
-// 			exit(retPilha);
-
-//             atualizaPc();
-//             return; 
-// 		}
-// 	}
-
-// 	if((strcmp(nomeClasse, "java/lang/Integer") == 0) && (strcmp(nomeMetodo,"parseInt") == 0)){
-
-// 			int32_t retPilha = pop_op();
-// 			pop_op();
-// 			push_pilha_operandos(retPilha);
-
-//             atualizaPc();
-//             return; 
-// 	}
-
-// 	if((strcmp(nomeClasse, "java/lang/Math") == 0) && (strcmp(nomeMetodo,"sqrt") == 0)){
-// 		if(strstr(descricaoMetodo, "(D)D") != NULL) {
-// 			int32_t baixa = pop_op();
-// 			int32_t alta = pop_op();
-
-// 			int64_t dVal = alta;
-
-// 			dVal <<= 32;
-
-// 			dVal = dVal + baixa;
-
-// 			double valorDouble1;
-// 			memcpy(&valorDouble1, &dVal, sizeof(int64_t));
-
-// 			valorDouble1 = sqrt (valorDouble1);
-
-// 			int64_t aux;
-// 			memcpy(&aux, &valorDouble1, sizeof(int64_t));
-
-// 			alta = aux >> 32;
-// 			baixa = aux & 0xffffffff;
-
-// 			push_pilha_operandos(alta);
-// 			push_pilha_operandos(baixa);
-
-//             atualizaPc();
-//             return; 
-// 		}
-// 	}
-
-// 	int32_t indexClasse = carregaMemClasse(nomeClasse);
-
-// 	classFile* classe = buscaClasseIndice(indexClasse);
-
-// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Methodref.name_and_type_index;
-
-// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoIndice);
-
-// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
-
-// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
-
-// 	for(int32_t i = 0; i < numeroParametros; i++)
-// 		fields[i] = pop_op();
-
-// 	empilhaMetodo(metodoInvocado, classe);
-
-// 	for(int32_t i = 0; i < numeroParametros; i++) {
-// 			get_frame_atual()->fields[i] = fields[numeroParametros - i - 1];
-// 	}
-
-// 	executaget_frame_atual()();
-// 	atualizaPc();
-// }
-
-// void invokeinterface(){
-// 	method_info* metodoInvocado;
-
-//     char* nomeMetodo;
-//     char* descricaoMetodo;
-//     uint16_t nomeMetodoAux, descricaoMetodoAux,nomeTipoAux,stringAux;
-
-// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
-
-// 	uint32_t indiceClasse = (get_frame_atual()->constant_pool[indice-1]).info.Methodref.class_index;
-
-// 	char* nomeClasse = retornaNome(get_frame_atual()->classe,(get_frame_atual()->constant_pool[indiceClasse-1]).info.Class.name_index);
-
-// 	nomeTipoAux = get_frame_atual()->constant_pool[indice - 1].info.Methodref.name_and_type_index;
-
-//     nomeMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.name_index;
-
-// 	descricaoMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.descriptor_index;
-
-//     nomeMetodo = retornaNome(get_frame_atual()->classe, nomeMetodoAux);
-
-//     descricaoMetodo = retornaNome(get_frame_atual()->classe, descricaoMetodoAux);
-
-// 	int32_t indexClasse = carregaMemClasse(nomeClasse);
-
-// 	classFile* classe = buscaClasseIndice(indexClasse);
-
-// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Methodref.name_and_type_index;
-
-// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoIndice);
-
-// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
-
-// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
-
-// 	for(int32_t i = 0; i < numeroParametros; i++)
-// 		fields[i] = pop_op();
-
-// 	empilhaMetodo(metodoInvocado, classe);
-
-// 	for(int32_t i = 0; i < numeroParametros; i++) {
-// 			get_frame_atual()->fields[i] = fields[numeroParametros - i - 1];
-// 	}
-
-// 	executaget_frame_atual()();
-// 	atualizaPc();
-
-// }
-
-// void ins_new(){
-// 	uint32_t indice;
-// 	int32_t aux;
-// 	char* nomeClasse;
-// 	classFile* classe;
-// 	objeto* objeto;
-
-// 	indice = get_frame_atual()->code[2+(get_frame_atual()->pc)];
-
-// 	nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[indice-1].info.Class.name_index);
-
-// 	if(strcmp("java/util/Scanner",nomeClasse) == 0){
-// 		naoEmpilhaFlag = 1;
-
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	if(strcmp("java/lang/StringBuffer",nomeClasse) == 0){
-// 		naoEmpilhaFlag = 1;
-
-// 		atualizaPc();
-// 		return;
-// 	}
-
-// 	aux = carregaMemClasse(nomeClasse);
-
-// 	classe = buscaClasseIndice(aux);
-
-// 	objeto = criaObjeto(classe);
-
-// 	if(objeto == NULL){
-// 		printf("Objeto não foi corretamente alocado\n");
-// 	}
-
-// 	push_pilha_operandos((int32_t) objeto);
-// 	atualizaPc();
-// }
-
-// void newarray(){
-
-// 	int32_t tamanhoBytes;
-
-// 	int32_t tamanhoArray = pop_op();
-
-// 	int8_t tipoArray = get_frame_atual()->code[(get_frame_atual()->pc)+1];
-
-// 	if(tipoArray == 11){
-// 		tamanhoBytes = 8;
-// 	}
-
-// 	if(tipoArray == 7){
-// 		tamanhoBytes = 8;
-// 	}
-
-// 	if(tipoArray == 6){
-// 		tamanhoBytes = 4;
-// 	}
-
-// 	if(tipoArray == 0){
-// 		tamanhoBytes = 4;
-// 	}
-
-// 	if(tipoArray == 10){
-// 		tamanhoBytes = 4;
-// 	}
-
-// 	if(tipoArray == 5){
-// 		tamanhoBytes = 2;
-// 	}
-
-// 	if(tipoArray == 9){
-// 		tamanhoBytes = 2;
-// 	}
-
-// 	if(tipoArray == 4){
-// 		tamanhoBytes = 1;
-// 	}
-
-// 	if(tipoArray == 8){
-// 		tamanhoBytes = 1;
-// 	}
-
-// 	int32_t* vetor = calloc(tamanhoBytes,tamanhoArray);
-
-// 	qtdArrays++;
-// 	arrayVetores = realloc (arrayVetores, sizeof(struct array)*qtdArrays);
-// 	arrayVetores[qtdArrays-1].tamanho = tamanhoArray;
-// 	arrayVetores[qtdArrays-1].referencia = (int32_t)vetor;
-// 	arrayVetores[qtdArrays-1].tipo = tipoArray;
-
-// 	push_pilha_operandos((int32_t)vetor);
-
-//     atualizaPc();
-
-// }
-
-// void anewarray(){
-
-// 	int32_t tamanhoBytes;
-
-// 	int32_t tamanhoArray = pop_op();
-
-// 	int8_t tipoArray = get_frame_atual()->code[(get_frame_atual()->pc)+1];
-
-// 	if(tipoArray == 11){
-// 		tamanhoBytes = 8;
-// 	}
-
-// 	if(tipoArray == 7){
-// 		tamanhoBytes = 8;
-// 	}
-
-// 	if(tipoArray == 6){
-// 		tamanhoBytes = 4;
-// 	}
-
-// 	if(tipoArray == 0){
-// 		tamanhoBytes = 4;
-// 	}
-
-// 	if(tipoArray == 10){
-// 		tamanhoBytes = 4;
-// 	}
-
-// 	if(tipoArray == 5){
-// 		tamanhoBytes = 2;
-// 	}
-
-// 	if(tipoArray == 9){
-// 		tamanhoBytes = 2;
-// 	}
-
-// 	if(tipoArray == 4){
-// 		tamanhoBytes = 1;
-// 	}
-
-// 	if(tipoArray == 8){
-// 		tamanhoBytes = 1;
-// 	}
-
-// 	int32_t* vetor = calloc(tamanhoBytes,tamanhoArray);
-
-// 	qtdArrays++;
-// 	arrayVetores = realloc (arrayVetores, sizeof(struct array)*qtdArrays);
-// 	arrayVetores[qtdArrays-1].tamanho = tamanhoArray;
-// 	arrayVetores[qtdArrays-1].referencia = (int32_t)vetor;
-// 	arrayVetores[qtdArrays-1].tipo = tipoArray;
-
-// 	push_pilha_operandos((int32_t)vetor);
-
-//     atualizaPc();
-// }
-
-// void arraylength(){
-
-// 	int32_t arrayRef = pop_op();
-// 	int i = 0;
-
-// 	while(i  < qtdArrays){
-
-// 		if(arrayVetores[i].referencia == arrayRef){
-
-// 			int32_t length = arrayVetores[i].tamanho;
-// 			push_pilha_operandos(length);
-// 			atualizaPc();
-// 			return;
-// 		}
-// 		i++;
-// 	}
-
-// 	push_pilha_operandos(0);
-// 	atualizaPc();
-// }
-
-// void checkcast(){
-// 	int16_t indice;
-// 	int8_t offset1,offset2;
-
-// 	offset1 =  get_frame_atual()->code[(get_frame_atual()->pc)+1];
-// 	offset2 =  get_frame_atual()->code[(get_frame_atual()->pc)+2];
-
-// 	indice = (offset1 << 8) | offset2;
-
-// 	objeto* objeto = (struct objeto*) pop_op();
-
-// 	if(objeto == NULL){
-// 		printf("Objeto nulo!\n");
-// 	}
-
-// 	char* nomeClasse = retornaNomeClasse(objeto->classe);
-
-// 	char* nomeIndice = retornaNome(get_frame_atual()->classe,indice);
-
-// 	if(strcmp(nomeClasse,nomeIndice) == 0){
-// 		printf("Objeto é do tipo: %s\n",nomeIndice);
-// 	}
-
-// 	push_pilha_operandos((int32_t)objeto);
-// 	atualizaPc();
-// }
-
-// void instanceof(){
-// 	int16_t indice;
-// 	int8_t offset1,offset2;
-
-// 	offset1 =  get_frame_atual()->code[(get_frame_atual()->pc)+1];
-// 	offset2 =  get_frame_atual()->code[(get_frame_atual()->pc)+2];
-
-// 	indice = (offset1 << 8) | offset2;
-
-// 	objeto* objeto = (struct objeto*) pop_op();
-
-// 	if(objeto == NULL){
-// 		printf("Objeto nulo!\n");
-// 		push_pilha_operandos(0);
-// 	}
-
-// 	char* nomeClasse = retornaNomeClasse(objeto->classe);
-
-// 	char* nomeIndice = retornaNome(get_frame_atual()->classe,indice);
-
-// 	if(strcmp(nomeClasse,nomeIndice) == 0){
-// 		printf("Objeto é do tipo: %s\n",nomeIndice);
-// 		push_pilha_operandos(1);
-// 	}
-// 	atualizaPc();
-// }
-
-// void wide(){
-
-// }
-
-// void multianewarray(){
-
-// }
-
-// void ifnull(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha == 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void ifnonnull(){
-// 	uint8_t offset1,offset2;
-// 	int16_t offset;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset = offset1;
-// 	offset <<= 8;
-// 	offset |= offset2;
-
-// 	int32_t retPilha = pop_op();
-
-// 	if(retPilha != 0){
-// 		get_frame_atual()->pc += offset;
-// 	}else{
-// 		get_frame_atual()->pc += 3;
-// 	}
-// }
-
-// void goto_w(){
-// 	int32_t deslocamento,offset1,offset2,offset3,offset4;
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset3 = get_frame_atual()->code[get_frame_atual()->pc + 3];
-// 	offset4 = get_frame_atual()->code[get_frame_atual()->pc + 4];
-
-// 	deslocamento  = (offset1 & 0xFF)<<24;
-// 	deslocamento |= (offset2 & 0xFF)<<16;
-// 	deslocamento |= (offset3 & 0xFF)<<8;
-// 	deslocamento |= (offset4 & 0xFF);
-
-// 	get_frame_atual()->pc += deslocamento;
-// }
-
-// void jsr_w(){
-// 	int32_t deslocamento,offset1,offset2,offset3,offset4;
-
-// 	push_pilha_operandos(get_frame_atual()->code[get_frame_atual()->pc + 5]);
-
-// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
-// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
-// 	offset3 = get_frame_atual()->code[get_frame_atual()->pc + 3];
-// 	offset4 = get_frame_atual()->code[get_frame_atual()->pc + 4];
-
-// 	deslocamento  = (offset1 & 0xFF)<<24;
-// 	deslocamento |= (offset2 & 0xFF)<<16;
-// 	deslocamento |= (offset3 & 0xFF)<<8;
-// 	deslocamento |= (offset4 & 0xFF);
-
-// 	get_frame_atual()->pc += deslocamento;
-// }
