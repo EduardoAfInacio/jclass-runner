@@ -11,7 +11,7 @@ void inicializa_pilha_frames()
     pilha_frame->length = 0;
 }
 
-void add_frame(ClassFile *classe, uint16_t method_index)
+void push_frame(ClassFile *classe, uint16_t method_index)
 {
     CodeAttribute *code = classe->methods[method_index].code_attribute;
 
@@ -22,11 +22,20 @@ void add_frame(ClassFile *classe, uint16_t method_index)
     pilha_frame->frames[pilha_frame->length].max_locals = code->max_locals;
     pilha_frame->frames[pilha_frame->length].code_length = code->code_length;
     pilha_frame->frames[pilha_frame->length].code = code->code;
-    pilha_frame->frames[pilha_frame->length].fields = calloc(1, sizeof(int32_t) * pilha_frame->frames[pilha_frame->length].max_locals);
-    pilha_frame->frames[pilha_frame->length].operandos = calloc(1, sizeof(int32_t) * pilha_frame->frames[pilha_frame->length].max_stack);
+    pilha_frame->frames[pilha_frame->length].fields = calloc(pilha_frame->frames[pilha_frame->length].max_locals, sizeof(int32_t));
+    pilha_frame->frames[pilha_frame->length].operandos = calloc(pilha_frame->frames[pilha_frame->length].max_stack, sizeof(int32_t));
     pilha_frame->frames[pilha_frame->length].operandos_length = 0;
 
     pilha_frame->length++;
+}
+
+void pop_frame()
+{
+    Frame *frame_atual = get_frame_atual();
+    free(frame_atual->fields);
+    free(frame_atual->operandos);
+    pilha_frame->frames = realloc(pilha_frame->frames, pilha_frame->length * sizeof(Frame));
+    pilha_frame->length--;
 }
 
 Frame *get_frame_atual()
@@ -45,7 +54,21 @@ void executa_frame_atual()
     Frame *frame_atual = get_frame_atual();
 }
 
-void push_pilha_operandos(int32_t valor)
+void push_retorno(int32_t retorno)
+{
+    Frame *proximo_frame = &(pilha_frame->frames[pilha_frame->length - 2]);
+
+    if (proximo_frame->operandos_length >= proximo_frame->max_stack)
+    {
+        printf("ERRO: Pilha de operandos excedida!\n");
+        exit(0);
+    }
+
+    proximo_frame->operandos[proximo_frame->operandos_length] = retorno;
+    proximo_frame->operandos_length++;
+}
+
+void push_operando(int32_t valor)
 {
     Frame *frame_atual = get_frame_atual();
 
@@ -59,9 +82,9 @@ void push_pilha_operandos(int32_t valor)
     frame_atual->operandos_length++;
 }
 
-int32_t pop_pilha_operandos()
+int32_t pop_operando()
 {
-    Frame* frame_atual = get_frame_atual();
+    Frame *frame_atual = get_frame_atual();
 
     if (frame_atual->operandos_length == 0)
     {
