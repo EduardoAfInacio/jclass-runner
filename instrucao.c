@@ -3288,3 +3288,863 @@ void areturn(){
 void jvm_return(){
     pop_frame();
 }
+
+// void getstatic(){
+
+//     get_frame_atual()->pilha_op->depth += 1;
+
+// 	atualizaPc();
+// }
+
+// void putstatic(){
+
+// }
+
+// void getfield(){
+
+// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
+
+// 	int32_t indiceClasse = get_frame_atual()->constant_pool[indice-1].info.Fieldref.class_index;
+
+// 	char* nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[indiceClasse-1].info.Class.name_index);
+
+// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Fieldref.name_and_type_index;
+
+// 	char* nome = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.name_index);
+// 	char* tipo = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.descriptor_index);
+// 	tipoGlobal = tipo;
+
+//  	if((strcmp(tipo, "Ljava/util/Scanner;") == 0)){
+//  		atualizaPc();
+// 		return;
+//  	}
+
+//  	objeto* obj = (objeto*) pop_op();
+
+//  	int32_t indiceField = buscaCampo(nomeClasse,nome,tipo);
+
+//  	uint32_t indiceNome = get_frame_atual()->classe->fields[indiceField].name_index;
+
+//  	if(tipo[0] == 'J' || tipo[0] == 'D') {
+//  		int32_t i;
+// 		for(i = 0;obj->indiceCampos[i] != indiceNome; i++);
+
+// 		int32_t baixa = obj->campos[i];
+// 		int32_t alta = obj->campos[i+1];
+
+// 		push_pilha_operandos(alta);
+// 		push_pilha_operandos(baixa);
+// 		atualizaPc();
+//  	}
+//  	else{
+
+// 	 	int32_t i;
+// 		for(i = 0;obj->indiceCampos[i] != indiceNome; i++);
+
+// 	 	uint32_t val = obj->campos[i];
+
+// 	 	push_pilha_operandos(val);
+
+// 		atualizaPc();
+// 	}
+// }
+
+// void putfield(){
+
+// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
+
+// 	int32_t indiceClasse = get_frame_atual()->constant_pool[indice-1].info.Fieldref.class_index;
+
+// 	char* nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[indiceClasse-1].info.Class.name_index);
+
+// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Fieldref.name_and_type_index;
+
+// 	char* nome = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.name_index);
+// 	char* tipo = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[nomeTipoIndice-1].info.NameAndType.descriptor_index);
+
+//  	int32_t indiceField = buscaCampo(nomeClasse,nome,tipo);
+
+//  	uint32_t indiceNome = get_frame_atual()->classe->fields[indiceField].name_index;
+
+//  	if(tipo[0] == 'J' || tipo[0] == 'D') {
+//  		int32_t alta,baixa;
+//  		int32_t val1 = pop_op();
+//  		int32_t val2 = pop_op();
+//  		objeto* obj = (objeto*)pop_op();
+
+// 		int64_t dVal = val2;
+
+// 		dVal <<= 32;
+
+// 		dVal = dVal + val1;
+
+// 		double valorDouble1;
+// 		memcpy(&valorDouble1, &dVal, sizeof(int64_t));
+
+// 		int i;
+// 		for(i = 0; obj->indiceCampos[i] != indiceNome; i++);
+
+// 		int64_t valorPilha;
+// 		memcpy(&valorPilha, &valorDouble1, sizeof(int64_t));
+
+// 		alta = valorPilha >> 32;
+// 		baixa = valorPilha & 0xffffffff;
+// 		obj->campos[i] = baixa;
+// 		obj->campos[i+1] = alta;
+//  	}
+//  	else{
+// 	 	int32_t val = pop_op();
+// 	 	objeto* obj = (objeto*)pop_op();
+// 	 	int i;
+// 	 	for(i = 0; obj->indiceCampos[i] != indiceNome; i++);
+// 		obj->campos[i] = val;
+// 	}
+
+// 	atualizaPc();
+// }
+
+// void invokevirtual(){
+// 	method_info* metodoInvocado;
+//     char* nomeClasse;
+//     char* nomeMetodo;
+//     char* descricaoMetodo;
+//     uint16_t nomeMetodoAux, descricaoMetodoAux,nomeTipoAux,stringAux;
+//     int32_t resultado,resultado2, resultado_string;
+//     int32_t classeIndice;
+//     uint8_t* string = NULL;
+//     static int8_t flagAppend = 0;
+
+//     uint32_t pcAux = get_frame_atual()->code[get_frame_atual()->pc + 2];
+
+//     classeIndice = get_frame_atual()->constant_pool[pcAux - 1].info.Methodref.class_index;
+
+//     nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[classeIndice - 1].info.Class.name_index);
+//     nomeTipoAux = get_frame_atual()->constant_pool[pcAux - 1].info.Methodref.name_and_type_index;
+
+//     nomeMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.name_index;
+
+// 	descricaoMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.descriptor_index;
+
+//     nomeMetodo = retornaNome(get_frame_atual()->classe, nomeMetodoAux);
+
+//     descricaoMetodo = retornaNome(get_frame_atual()->classe, descricaoMetodoAux);
+
+//     if((strcmp(nomeClasse, "java/lang/StringBuffer") == 0) && (strcmp(nomeMetodo,"append") == 0)){
+// 			flagAppend++;
+// 		    foi_lneg = false;
+// 			atualizaPc();
+// 			return;
+// 	}
+
+// 	if((strcmp(nomeClasse, "java/lang/StringBuffer") == 0) && (strcmp(nomeMetodo,"toString") == 0)){
+// 		    foi_lneg = false;
+// 			atualizaPc();
+// 			return;
+// 	}
+
+// 	if((strcmp(nomeClasse, "java/util/Scanner") == 0) && (strcmp(nomeMetodo,"next") == 0)){
+// 		int32_t aux;
+// 		scanf("%d",&aux);
+// 		push_pilha_operandos(aux);
+// 		foi_lneg = false;
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	if((strcmp(nomeClasse, "java/io/PrintStream") == 0) && (strcmp(nomeMetodo,"println") == 0)){
+//         if (strcmp(descricaoMetodo, "()V") == 0)
+//         {
+//             printf("\n");
+//         }
+
+//         else if (flagAppend == 0)
+//         {
+//             resultado = pop_op();
+
+//             if (tipoGlobal == NULL)
+//             {
+//                 string = get_frame_atual()->constant_pool[resultado].info.Utf8.bytes;
+//             }
+
+//             if (string != NULL) {
+//                 printf("%s\n",string);
+//             }
+//             else if(strcmp(tipoGlobal, "Z") == 0)
+//             {
+//                 if(resultado){
+//                 	printf("TRUE\n");
+//                 }else{
+//                 	printf("FALSE\n");
+//                 }
+//             }
+//             else if(strcmp(tipoGlobal, "F") == 0)
+//             {
+//                 float valDesemp;
+//                 memcpy(&valDesemp, &resultado, sizeof(float));
+//                 printf("%f\n",valDesemp);
+//             }
+
+//             else if(strcmp(tipoGlobal, "D") == 0)
+//             {
+//                 resultado2 = pop_op();
+//                 double resultado_double;
+//                 int64_t temp;
+
+//                 temp = resultado2;
+//                 temp <<= 32;
+//                 temp += resultado;
+//                 memcpy(&resultado_double, &temp, sizeof(int64_t));
+//                 printf("%f\n", resultado_double);
+//             }
+
+//             else if(strcmp(tipoGlobal, "L") == 0)
+//             {
+//                 resultado2 = pop_op();
+//                 int64_t long_num;
+//                 long long result;
+
+//                 long_num= resultado2;
+//                 long_num <<= 32;
+//                 long_num |= resultado;
+
+//                 memcpy(&result, &long_num, sizeof(long));
+//                 foi_lneg = false;
+//                 if (!foi_lneg)
+//                 {
+//                     printf("%" PRId64 "\n", long_num);
+//                 }
+//                 else
+//                 {
+//                     printf("%" PRId64 "\n", result);
+//                 }
+//             }
+
+//             else if (strcmp(tipoGlobal, "I") == 0)
+//             {
+//                 printf("%d\n", resultado);
+//             }
+
+//             else if (strcmp(tipoGlobal, "C") == 0)
+//             {
+//                 printf("%c\n", resultado);
+//             }
+
+//             else
+//             {
+//                 printf("erro no invoke_virtual, tipoGlobal ainda nao setado");
+//                 exit(1);
+//             }
+//         }
+
+//         else if (flagAppend == 2)
+//         {
+//             if(strcmp(tipoGlobal, "F") == 0)
+//             {
+//                 resultado = pop_op();
+//                 resultado_string = pop_op();
+
+//                 string = get_frame_atual()->constant_pool[resultado_string].info.Utf8.bytes;
+//                 if (string != NULL)
+//                 {
+//                     printf("%s",string);
+//                 }
+
+//                 float valDesemp;
+//                 memcpy(&valDesemp,&resultado, sizeof(float));
+//                 printf("%f\n",valDesemp);
+//             }
+
+//             else if(strcmp(tipoGlobal, "I") == 0)
+//             {
+//                 resultado = pop_op();
+//                 resultado_string = pop_op();
+
+//                 string = get_frame_atual()->constant_pool[resultado_string].info.Utf8.bytes;
+//                 if (string != NULL)
+//                 {
+//                     printf("%s",string);
+//                 }
+//                 printf("%d\n", resultado);
+//             }
+
+//             else if(strcmp(tipoGlobal, "D") == 0)
+//             {
+//                 resultado = pop_op();
+//                 resultado2 = pop_op();
+//                 resultado_string = pop_op();
+
+//                 double resultado_double;
+//                 int64_t temp;
+
+//                 temp = resultado2;
+//                 temp <<= 32;
+//                 temp += resultado;
+
+//                 if (string != NULL)
+//                 {
+//                     printf("%s",string);
+//                 }
+
+//                 memcpy(&resultado_double, &temp, sizeof(int64_t));
+//                 printf("%lf\n", resultado_double);
+//             }
+
+//             else
+//             {
+//                 printf("tipoGlobal ainda nao reconhecido");
+//                 exit(1);
+//             }
+
+//             flagAppend = 0;
+//         }
+//         else{
+//         	return;
+//         }
+
+//         foi_lneg = false;
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	classeIndice = carregaMemClasse(nomeClasse);
+// 	classFile* classe = buscaClasseIndice(classeIndice);
+
+// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoAux);
+// 	if(metodoInvocado == NULL){
+// 		printf("Método não Encontrado!\n");
+// 		exit(0);
+// 	}
+
+// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
+
+// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
+
+// 	for(int32_t i = 0; i <= numeroParametros; i++){
+// 		fields[i] = pop_op();
+// 	}
+
+// 	empilhaMetodo(metodoInvocado, classe);
+
+// 	for(int32_t i = 0; i <= numeroParametros; i++) {
+// 			get_frame_atual()->fields[i] = fields[numeroParametros - i];
+// 	}
+
+// 	executaget_frame_atual()();
+
+// 	foi_lneg = false;
+// 	atualizaPc();
+// 	return;
+// }
+
+// void invokespecial(){
+// 	method_info* metodoInvocado;
+
+// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
+
+// 	uint32_t indiceClasse = (get_frame_atual()->constant_pool[indice-1]).info.Methodref.class_index;
+
+// 	char* nomeClasse = retornaNome(get_frame_atual()->classe,(get_frame_atual()->constant_pool[indiceClasse-1]).info.Class.name_index);
+
+//     if(strcmp("java/lang/Object",nomeClasse) == 0){
+
+// 		carregaMemClasse(nomeClasse);
+
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	if(strcmp("java/lang/StringBuffer",nomeClasse) == 0){
+
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	if(strcmp("java/util/Scanner",nomeClasse) == 0){
+
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	int32_t indexClasse = carregaMemClasse(nomeClasse);
+
+// 	classFile* classe = buscaClasseIndice(indexClasse);
+
+// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Methodref.name_and_type_index;
+
+// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoIndice);
+
+// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
+
+// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
+
+// 	for(int32_t i = 0; i <= numeroParametros; i++){
+// 		fields[i] = pop_op();
+// 	}
+
+// 	empilhaMetodo(metodoInvocado, classe);
+
+// 	for(int32_t i = 0; i <= numeroParametros; i++) {
+// 			get_frame_atual()->fields[i] = fields[numeroParametros - i];
+// 	}
+
+// 	executaget_frame_atual()();
+
+// 	atualizaPc();
+// }
+
+// void invokestatic(){
+
+// 	method_info* metodoInvocado;
+
+//     char* nomeMetodo;
+//     char* descricaoMetodo;
+//     uint16_t nomeMetodoAux, descricaoMetodoAux,nomeTipoAux,stringAux;
+
+// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
+
+// 	uint32_t indiceClasse = (get_frame_atual()->constant_pool[indice-1]).info.Methodref.class_index;
+
+// 	char* nomeClasse = retornaNome(get_frame_atual()->classe,(get_frame_atual()->constant_pool[indiceClasse-1]).info.Class.name_index);
+
+// 	nomeTipoAux = get_frame_atual()->constant_pool[indice - 1].info.Methodref.name_and_type_index;
+
+//     nomeMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.name_index;
+
+// 	descricaoMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.descriptor_index;
+
+//     nomeMetodo = retornaNome(get_frame_atual()->classe, nomeMetodoAux);
+
+//     descricaoMetodo = retornaNome(get_frame_atual()->classe, descricaoMetodoAux);
+
+// 	if((strcmp(nomeClasse, "java/lang/System") == 0) && (strcmp(nomeMetodo,"exit") == 0)){
+// 		if(strstr(descricaoMetodo, "(I)V") != NULL) {
+// 			int32_t retPilha = pop_op();
+// 			exit(retPilha);
+
+//             atualizaPc();
+//             return;
+// 		}
+// 	}
+
+// 	if((strcmp(nomeClasse, "java/lang/Integer") == 0) && (strcmp(nomeMetodo,"parseInt") == 0)){
+
+// 			int32_t retPilha = pop_op();
+// 			pop_op();
+// 			push_pilha_operandos(retPilha);
+
+//             atualizaPc();
+//             return;
+// 	}
+
+// 	if((strcmp(nomeClasse, "java/lang/Math") == 0) && (strcmp(nomeMetodo,"sqrt") == 0)){
+// 		if(strstr(descricaoMetodo, "(D)D") != NULL) {
+// 			int32_t baixa = pop_op();
+// 			int32_t alta = pop_op();
+
+// 			int64_t dVal = alta;
+
+// 			dVal <<= 32;
+
+// 			dVal = dVal + baixa;
+
+// 			double valorDouble1;
+// 			memcpy(&valorDouble1, &dVal, sizeof(int64_t));
+
+// 			valorDouble1 = sqrt (valorDouble1);
+
+// 			int64_t aux;
+// 			memcpy(&aux, &valorDouble1, sizeof(int64_t));
+
+// 			alta = aux >> 32;
+// 			baixa = aux & 0xffffffff;
+
+// 			push_pilha_operandos(alta);
+// 			push_pilha_operandos(baixa);
+
+//             atualizaPc();
+//             return;
+// 		}
+// 	}
+
+// 	int32_t indexClasse = carregaMemClasse(nomeClasse);
+
+// 	classFile* classe = buscaClasseIndice(indexClasse);
+
+// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Methodref.name_and_type_index;
+
+// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoIndice);
+
+// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
+
+// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
+
+// 	for(int32_t i = 0; i < numeroParametros; i++)
+// 		fields[i] = pop_op();
+
+// 	empilhaMetodo(metodoInvocado, classe);
+
+// 	for(int32_t i = 0; i < numeroParametros; i++) {
+// 			get_frame_atual()->fields[i] = fields[numeroParametros - i - 1];
+// 	}
+
+// 	executaget_frame_atual()();
+// 	atualizaPc();
+// }
+
+// void invokeinterface(){
+// 	method_info* metodoInvocado;
+
+//     char* nomeMetodo;
+//     char* descricaoMetodo;
+//     uint16_t nomeMetodoAux, descricaoMetodoAux,nomeTipoAux,stringAux;
+
+// 	uint32_t indice = get_frame_atual()->code[get_frame_atual()->pc + 2];
+
+// 	uint32_t indiceClasse = (get_frame_atual()->constant_pool[indice-1]).info.Methodref.class_index;
+
+// 	char* nomeClasse = retornaNome(get_frame_atual()->classe,(get_frame_atual()->constant_pool[indiceClasse-1]).info.Class.name_index);
+
+// 	nomeTipoAux = get_frame_atual()->constant_pool[indice - 1].info.Methodref.name_and_type_index;
+
+//     nomeMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.name_index;
+
+// 	descricaoMetodoAux = get_frame_atual()->constant_pool[nomeTipoAux - 1].info.NameAndType.descriptor_index;
+
+//     nomeMetodo = retornaNome(get_frame_atual()->classe, nomeMetodoAux);
+
+//     descricaoMetodo = retornaNome(get_frame_atual()->classe, descricaoMetodoAux);
+
+// 	int32_t indexClasse = carregaMemClasse(nomeClasse);
+
+// 	classFile* classe = buscaClasseIndice(indexClasse);
+
+// 	uint16_t nomeTipoIndice = get_frame_atual()->constant_pool[indice-1].info.Methodref.name_and_type_index;
+
+// 	metodoInvocado = buscaMetodo(get_frame_atual()->classe,classe,nomeTipoIndice);
+
+// 	int32_t numeroParametros = retornaNumeroParametros(classe,metodoInvocado);
+
+// 	uint32_t* fields = calloc(sizeof(uint32_t),numeroParametros + 1);
+
+// 	for(int32_t i = 0; i < numeroParametros; i++)
+// 		fields[i] = pop_op();
+
+// 	empilhaMetodo(metodoInvocado, classe);
+
+// 	for(int32_t i = 0; i < numeroParametros; i++) {
+// 			get_frame_atual()->fields[i] = fields[numeroParametros - i - 1];
+// 	}
+
+// 	executaget_frame_atual()();
+// 	atualizaPc();
+
+// }
+
+// void ins_new(){
+// 	uint32_t indice;
+// 	int32_t aux;
+// 	char* nomeClasse;
+// 	classFile* classe;
+// 	objeto* objeto;
+
+// 	indice = get_frame_atual()->code[2+(get_frame_atual()->pc)];
+
+// 	nomeClasse = retornaNome(get_frame_atual()->classe, get_frame_atual()->constant_pool[indice-1].info.Class.name_index);
+
+// 	if(strcmp("java/util/Scanner",nomeClasse) == 0){
+// 		naoEmpilhaFlag = 1;
+
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	if(strcmp("java/lang/StringBuffer",nomeClasse) == 0){
+// 		naoEmpilhaFlag = 1;
+
+// 		atualizaPc();
+// 		return;
+// 	}
+
+// 	aux = carregaMemClasse(nomeClasse);
+
+// 	classe = buscaClasseIndice(aux);
+
+// 	objeto = criaObjeto(classe);
+
+// 	if(objeto == NULL){
+// 		printf("Objeto não foi corretamente alocado\n");
+// 	}
+
+// 	push_pilha_operandos((int32_t) objeto);
+// 	atualizaPc();
+// }
+
+// void newarray(){
+
+// 	int32_t tamanhoBytes;
+
+// 	int32_t tamanhoArray = pop_op();
+
+// 	int8_t tipoArray = get_frame_atual()->code[(get_frame_atual()->pc)+1];
+
+// 	if(tipoArray == 11){
+// 		tamanhoBytes = 8;
+// 	}
+
+// 	if(tipoArray == 7){
+// 		tamanhoBytes = 8;
+// 	}
+
+// 	if(tipoArray == 6){
+// 		tamanhoBytes = 4;
+// 	}
+
+// 	if(tipoArray == 0){
+// 		tamanhoBytes = 4;
+// 	}
+
+// 	if(tipoArray == 10){
+// 		tamanhoBytes = 4;
+// 	}
+
+// 	if(tipoArray == 5){
+// 		tamanhoBytes = 2;
+// 	}
+
+// 	if(tipoArray == 9){
+// 		tamanhoBytes = 2;
+// 	}
+
+// 	if(tipoArray == 4){
+// 		tamanhoBytes = 1;
+// 	}
+
+// 	if(tipoArray == 8){
+// 		tamanhoBytes = 1;
+// 	}
+
+// 	int32_t* vetor = calloc(tamanhoBytes,tamanhoArray);
+
+// 	qtdArrays++;
+// 	arrayVetores = realloc (arrayVetores, sizeof(struct array)*qtdArrays);
+// 	arrayVetores[qtdArrays-1].tamanho = tamanhoArray;
+// 	arrayVetores[qtdArrays-1].referencia = (int32_t)vetor;
+// 	arrayVetores[qtdArrays-1].tipo = tipoArray;
+
+// 	push_pilha_operandos((int32_t)vetor);
+
+//     atualizaPc();
+
+// }
+
+// void anewarray(){
+
+// 	int32_t tamanhoBytes;
+
+// 	int32_t tamanhoArray = pop_op();
+
+// 	int8_t tipoArray = get_frame_atual()->code[(get_frame_atual()->pc)+1];
+
+// 	if(tipoArray == 11){
+// 		tamanhoBytes = 8;
+// 	}
+
+// 	if(tipoArray == 7){
+// 		tamanhoBytes = 8;
+// 	}
+
+// 	if(tipoArray == 6){
+// 		tamanhoBytes = 4;
+// 	}
+
+// 	if(tipoArray == 0){
+// 		tamanhoBytes = 4;
+// 	}
+
+// 	if(tipoArray == 10){
+// 		tamanhoBytes = 4;
+// 	}
+
+// 	if(tipoArray == 5){
+// 		tamanhoBytes = 2;
+// 	}
+
+// 	if(tipoArray == 9){
+// 		tamanhoBytes = 2;
+// 	}
+
+// 	if(tipoArray == 4){
+// 		tamanhoBytes = 1;
+// 	}
+
+// 	if(tipoArray == 8){
+// 		tamanhoBytes = 1;
+// 	}
+
+// 	int32_t* vetor = calloc(tamanhoBytes,tamanhoArray);
+
+// 	qtdArrays++;
+// 	arrayVetores = realloc (arrayVetores, sizeof(struct array)*qtdArrays);
+// 	arrayVetores[qtdArrays-1].tamanho = tamanhoArray;
+// 	arrayVetores[qtdArrays-1].referencia = (int32_t)vetor;
+// 	arrayVetores[qtdArrays-1].tipo = tipoArray;
+
+// 	push_pilha_operandos((int32_t)vetor);
+
+//     atualizaPc();
+// }
+
+// void arraylength(){
+
+// 	int32_t arrayRef = pop_op();
+// 	int i = 0;
+
+// 	while(i  < qtdArrays){
+
+// 		if(arrayVetores[i].referencia == arrayRef){
+
+// 			int32_t length = arrayVetores[i].tamanho;
+// 			push_pilha_operandos(length);
+// 			atualizaPc();
+// 			return;
+// 		}
+// 		i++;
+// 	}
+
+// 	push_pilha_operandos(0);
+// 	atualizaPc();
+// }
+
+// void checkcast(){
+// 	int16_t indice;
+// 	int8_t offset1,offset2;
+
+// 	offset1 =  get_frame_atual()->code[(get_frame_atual()->pc)+1];
+// 	offset2 =  get_frame_atual()->code[(get_frame_atual()->pc)+2];
+
+// 	indice = (offset1 << 8) | offset2;
+
+// 	objeto* objeto = (struct objeto*) pop_op();
+
+// 	if(objeto == NULL){
+// 		printf("Objeto nulo!\n");
+// 	}
+
+// 	char* nomeClasse = retornaNomeClasse(objeto->classe);
+
+// 	char* nomeIndice = retornaNome(get_frame_atual()->classe,indice);
+
+// 	if(strcmp(nomeClasse,nomeIndice) == 0){
+// 		printf("Objeto é do tipo: %s\n",nomeIndice);
+// 	}
+
+// 	push_pilha_operandos((int32_t)objeto);
+// 	atualizaPc();
+// }
+
+// void instanceof(){
+// 	int16_t indice;
+// 	int8_t offset1,offset2;
+
+// 	offset1 =  get_frame_atual()->code[(get_frame_atual()->pc)+1];
+// 	offset2 =  get_frame_atual()->code[(get_frame_atual()->pc)+2];
+
+// 	indice = (offset1 << 8) | offset2;
+
+// 	objeto* objeto = (struct objeto*) pop_op();
+
+// 	if(objeto == NULL){
+// 		printf("Objeto nulo!\n");
+// 		push_pilha_operandos(0);
+// 	}
+
+// 	char* nomeClasse = retornaNomeClasse(objeto->classe);
+
+// 	char* nomeIndice = retornaNome(get_frame_atual()->classe,indice);
+
+// 	if(strcmp(nomeClasse,nomeIndice) == 0){
+// 		printf("Objeto é do tipo: %s\n",nomeIndice);
+// 		push_pilha_operandos(1);
+// 	}
+// 	atualizaPc();
+// }
+
+// void wide(){
+
+// }
+
+// void multianewarray(){
+
+// }
+
+// void ifnull(){
+// 	uint8_t offset1,offset2;
+// 	int16_t offset;
+
+// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
+// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
+// 	offset = offset1;
+// 	offset <<= 8;
+// 	offset |= offset2;
+
+// 	int32_t retPilha = pop_op();
+
+// 	if(retPilha == 0){
+// 		get_frame_atual()->pc += offset;
+// 	}else{
+// 		get_frame_atual()->pc += 3;
+// 	}
+// }
+
+// void ifnonnull(){
+// 	uint8_t offset1,offset2;
+// 	int16_t offset;
+
+// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
+// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
+// 	offset = offset1;
+// 	offset <<= 8;
+// 	offset |= offset2;
+
+// 	int32_t retPilha = pop_op();
+
+// 	if(retPilha != 0){
+// 		get_frame_atual()->pc += offset;
+// 	}else{
+// 		get_frame_atual()->pc += 3;
+// 	}
+// }
+
+// void goto_w(){
+// 	int32_t deslocamento,offset1,offset2,offset3,offset4;
+
+// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
+// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
+// 	offset3 = get_frame_atual()->code[get_frame_atual()->pc + 3];
+// 	offset4 = get_frame_atual()->code[get_frame_atual()->pc + 4];
+
+// 	deslocamento  = (offset1 & 0xFF)<<24;
+// 	deslocamento |= (offset2 & 0xFF)<<16;
+// 	deslocamento |= (offset3 & 0xFF)<<8;
+// 	deslocamento |= (offset4 & 0xFF);
+
+// 	get_frame_atual()->pc += deslocamento;
+// }
+
+// void jsr_w(){
+// 	int32_t deslocamento,offset1,offset2,offset3,offset4;
+
+// 	push_pilha_operandos(get_frame_atual()->code[get_frame_atual()->pc + 5]);
+
+// 	offset1 = get_frame_atual()->code[get_frame_atual()->pc + 1];
+// 	offset2 = get_frame_atual()->code[get_frame_atual()->pc + 2];
+// 	offset3 = get_frame_atual()->code[get_frame_atual()->pc + 3];
+// 	offset4 = get_frame_atual()->code[get_frame_atual()->pc + 4];
+
+// 	deslocamento  = (offset1 & 0xFF)<<24;
+// 	deslocamento |= (offset2 & 0xFF)<<16;
+// 	deslocamento |= (offset3 & 0xFF)<<8;
+// 	deslocamento |= (offset4 & 0xFF);
+
+// 	get_frame_atual()->pc += deslocamento;
+// }

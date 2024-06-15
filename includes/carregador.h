@@ -1,10 +1,16 @@
 #ifndef CARREGADOR_H
 #define CARREGADOR_H
 
-#include "classes.h"
+#include "leitor.h"
 
-extern Classes classes;
+typedef struct
+{
+    ClassFile** classes; 
+    int length;
+} ListaClasse;
 
-void carrega_object();
+extern ListaClasse classes;
+
+void inicializa_lista_classes();
 
 #endif

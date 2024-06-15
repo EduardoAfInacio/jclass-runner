@@ -2,11 +2,11 @@
 
 #include <stdlib.h>
 
-Classes classes;
+ListaClasse lista_classes;
 
-void carrega_object() {
-    classes.content = (ClassFile**) calloc(1, sizeof(ClassFile*));
-    classes.content[0] = class_reader("classpath/Object.class");
-
-    classes.length = 1;
+void inicializa_lista_classes()
+{
+    lista_classes.classes = (ClassFile **)calloc(1, sizeof(ClassFile *));
+    lista_classes.classes[0] = class_reader("classpath/Object.class");
+    lista_classes.length = 1;
 }

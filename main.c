@@ -1,13 +1,8 @@
 #include <stdio.h>
 
-#include "includes/exibidor.h"
-#include "includes/leitor.h"
-#include "includes/carregador.h"
 #include "includes/frame.h"
+#include "includes/carregador.h"
 #include "includes/instrucao.h"
-#include "includes/utils.h"
-#include <string.h>
-#include <stdlib.h>
 
 int main(int argc, char *args[]) {
   
@@ -19,6 +14,7 @@ int main(int argc, char *args[]) {
   // inicializações
   inicializa_instrucoes();
   inicializa_pilha_frames();
+  inicializa_lista_classes();
 
-  carrega_object();
+  
 }
