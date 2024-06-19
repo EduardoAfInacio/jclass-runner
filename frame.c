@@ -11,13 +11,13 @@ void inicializa_pilha_frames()
     pilha_frame->length = 0;
 }
 
-void push_frame(ClassFile *classe, uint16_t method_index)
+void push_frame(ConstantPool *constant_pool, Method *metodo)
 {
-    CodeAttribute *code = classe->methods[method_index].code_attribute;
+    CodeAttribute *code = metodo->code_attribute;
 
     pilha_frame->frames = realloc(pilha_frame->frames, (pilha_frame->length + 1) * sizeof(Frame));
     pilha_frame->frames[pilha_frame->length].pc = 0;
-    pilha_frame->frames[pilha_frame->length].constant_pool = classe->constant_pool;
+    pilha_frame->frames[pilha_frame->length].constant_pool = constant_pool;
     pilha_frame->frames[pilha_frame->length].max_stack = code->max_stack;
     pilha_frame->frames[pilha_frame->length].max_locals = code->max_locals;
     pilha_frame->frames[pilha_frame->length].code_length = code->code_length;
@@ -51,7 +51,15 @@ Frame *get_frame_atual()
 
 void executa_frame_atual()
 {
-    Frame *frame_atual = get_frame_atual();
+    Frame *frame_atual;
+
+    do
+    {
+        frame_atual = get_frame_atual();
+        instrucoes[frame_atual->code[frame_atual->pc]].exec();
+    } while (frame_atual->pc < frame_atual->code_length);
+
+    pop_frame();
 }
 
 void push_retorno(int32_t retorno)

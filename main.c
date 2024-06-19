@@ -3,6 +3,8 @@
 #include "includes/frame.h"
 #include "includes/carregador.h"
 #include "includes/instrucao.h"
+#include "includes/area_metodos.h"
+#include "includes/utils.h"
 
 int main(int argc, char *args[]) {
   
@@ -15,6 +17,5 @@ int main(int argc, char *args[]) {
   inicializa_instrucoes();
   inicializa_pilha_frames();
   inicializa_lista_classes();
-
-  
+  inicializa_lista_arrays();
 }

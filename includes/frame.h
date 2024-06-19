@@ -23,7 +23,7 @@ typedef struct {
 extern PilhaFrame* pilha_frame;
 
 void inicializa_pilha_frames();
-void push_frame(ClassFile* classe, uint16_t method_index);
+void push_frame(ConstantPool* constant_pool, Method* metodo);
 void pop_frame();
 Frame* get_frame_atual();
 void executa_frame_atual();
@@ -31,5 +31,6 @@ void push_operando(int32_t valor);
 int32_t pop_operando();
 void push_retorno(int32_t retorno);
 void atualiza_pc();
+void executa_frame_atual();
 
 #endif

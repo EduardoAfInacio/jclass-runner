@@ -5,7 +5,8 @@
         "decodificador.h": "c",
         "frame.h": "c",
         "instrucao.h": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "area_metodos.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

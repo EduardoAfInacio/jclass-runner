@@ -2,15 +2,9 @@
 #define CARREGADOR_H
 
 #include "leitor.h"
+#include "area_metodos.h"
 
-typedef struct
-{
-    ClassFile** classes; 
-    int length;
-} ListaClasse;
-
-extern ListaClasse classes;
-
-void inicializa_lista_classes();
+ClassFile *carrega_classe(char* classe);
+Method *busca_metodo(ClassFile *classe, char *nome, char *descritor);
 
 #endif
