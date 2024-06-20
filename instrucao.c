@@ -1031,6 +1031,7 @@ void ldc2_w()
         menos_significativos = frame_atual->constant_pool[indice - 1].info.Double.low_bytes;
         push_operando(mais_significativos);
         push_operando(menos_significativos);
+        break;
 
     default:
         printf("ERRO: ldc2_w não implementada para tag %d\n", tag);
@@ -3400,13 +3401,57 @@ void invokevirtual()
 
     if (!strcmp(nome_classe, "java/io/PrintStream") && !strcmp(nome_metodo, "println"))
     {
-        if (!strcmp(descritor_metodo, "(Ljava/lang/String;)V"))
+        if (!strcmp(descritor_metodo, "(Z)V"))
+        {
+            bool valor = pop_operando(); 
+            printf("%s\n", valor ? "true" : "false");
+        }
+        else if(!strcmp(descritor_metodo, "(C)V"))
+        {
+            uint32_t valor = pop_operando();
+            printf("%c\n", valor);
+        }
+        else if (!strcmp(descritor_metodo, "(I)V"))
+        {
+            int32_t valor = pop_operando();
+            printf("%d\n", valor);
+        }
+        else if (!strcmp(descritor_metodo, "(J)V"))
+        {
+            int32_t valor2 = pop_operando();
+            int32_t valor1 = pop_operando();
+            int64_t valor = concat64(valor1, valor2);
+            printf("%lld\n", valor);
+        }
+        else if (!strcmp(descritor_metodo, "(F)V"))
+        {
+            int32_t valor_i = pop_operando();
+            float valor_f;
+            memcpy(&valor_f, &valor_i, sizeof(int32_t));
+            printf("%f\n", valor_f);
+        }
+        else if (!strcmp(descritor_metodo, "(D)V"))
+        {
+            int32_t valor2_i = pop_operando();
+            int32_t valor1_i = pop_operando();
+            int64_t valor_l = concat64(valor1_i, valor2_i);
+            double valor_d;
+            memcpy(&valor_d, &valor_l, sizeof(int64_t));
+            printf("%lf\n", valor_d);
+        }
+        else if (!strcmp(descritor_metodo, "(Ljava/lang/String;)V"))
         {
             uint32_t indice = pop_operando();
             char* valor = read_string_cp(frame_atual->constant_pool, indice);
             printf("%s\n", valor);
         }
+        else
+        {
+            printf("ERRO: println nao implementada para tipo %s\n", descritor_metodo);
+            exit(1);
+        }
 
+        pop_operando();
         atualiza_pc();
         return;
     }

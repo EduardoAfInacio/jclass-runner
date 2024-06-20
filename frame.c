@@ -56,10 +56,10 @@ void executa_frame_atual()
     {
         frame_atual = get_frame_atual();
 
-        printf("--------------------------\n");
-        printf("PC: %d\n", frame_atual->pc);
-        printf("Instrucao: %s\n", instrucoes[frame_atual->code[frame_atual->pc]].nome);
-        printf("--------------------------\n\n");
+        // printf("--------------------------\n");
+        // printf("PC: %d\n", frame_atual->pc);
+        // printf("Instrucao: %s\n", instrucoes[frame_atual->code[frame_atual->pc]].nome);
+        // printf("--------------------------\n\n");
 
         instrucoes[frame_atual->code[frame_atual->pc]].exec();
     } while (frame_atual->pc < frame_atual->code_length);

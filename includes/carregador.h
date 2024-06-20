@@ -7,5 +7,6 @@
 ClassFile *carrega_classe(char* classe);
 Method *busca_metodo(ClassFile *classe, char *nome, char *descritor);
 ClassFile *carrega_classe_fora_classpath(char *classe);
+ClassFile *busca_classe(char *nome_classe);
 
 #endif

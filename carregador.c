@@ -4,79 +4,73 @@
 #include "includes/utils.h"
 #include "includes/frame.h"
 
-ClassFile *carrega_classe(char *classe)
+ClassFile *carrega_classe(char *nome_classe)
 {
-    for (uint32_t i = 0; i < lista_classes.length; i++)
-    {
-        char *nome_classe_carregada = read_nome_classe(lista_classes.classes[i]);
+    ClassFile *classe = busca_classe(nome_classe);
 
-        if (!strcmp(classe, nome_classe_carregada))
-        {
-            return lista_classes.classes[i];
-        }
+    if (classe)
+    {
+        return classe;
     }
 
-    char *caminho = calloc(16 + strlen(classe), sizeof(char));
+    char *caminho = calloc(16 + strlen(nome_classe), sizeof(char));
     strcpy(caminho, "classpath/");
-    strcat(caminho, classe);
+    strcat(caminho, nome_classe);
     strcat(caminho, ".class");
 
-    ClassFile *class_file = class_reader(caminho);
+    classe = class_reader(caminho);
 
-    if (!class_file)
+    if (!classe)
     {
-        printf("ERRO: classe %s nao encontrada\n", classe);
+        printf("ERRO: classe %s nao encontrada\n", nome_classe);
         exit(1);
     }
 
-    Method *clinit = busca_metodo(class_file, "<clinit>", "()V");
+    Method *clinit = busca_metodo(classe, "<clinit>", "()V");
 
     if (clinit)
     {
-        push_frame(class_file->constant_pool, clinit);
+        push_frame(classe->constant_pool, clinit);
         executa_frame_atual();
     }
 
     lista_classes.classes = realloc(lista_classes.classes, sizeof(ClassFile *) * lista_classes.length + 1);
-    lista_classes.classes[lista_classes.length] = class_file;
+    lista_classes.classes[lista_classes.length] = classe;
     lista_classes.length++;
 
-    return class_file;
+    return classe;
 }
 
-ClassFile *carrega_classe_fora_classpath(char *classe)
+ClassFile *carrega_classe_fora_classpath(char *caminho_classe)
 {
-    ClassFile *class_file = class_reader(classe);
+    ClassFile *classe = class_reader(caminho_classe);
 
-    if (!class_file)
+    if (!classe)
     {
+        printf("ERRO: classe %s nao encontrada\n", caminho_classe);
         exit(1);
     }
 
-    for (uint32_t i = 0; i < lista_classes.length; i++)
-    {
-        char *nome_classe = read_nome_classe(class_file);
-        char *nome_classe_carregada = read_nome_classe(lista_classes.classes[i]);
+    char *nome_classe = read_nome_classe(classe);
 
-        if (!strcmp(nome_classe, nome_classe_carregada))
-        {
-            return lista_classes.classes[i];
-        }
+    if(busca_classe(nome_classe))
+    {
+        return classe;
     }
 
-    Method *clinit = busca_metodo(class_file, "<clinit>", "()V");
+    Method *clinit = busca_metodo(classe, "<clinit>", "()V");
 
     if (clinit)
     {
-        push_frame(class_file->constant_pool, clinit);
+        push_frame(classe->constant_pool, clinit);
         executa_frame_atual();
     }
 
     lista_classes.classes = realloc(lista_classes.classes, sizeof(ClassFile *) * lista_classes.length + 1);
-    lista_classes.classes[lista_classes.length] = class_file;
+    lista_classes.classes[lista_classes.length] = classe;
     lista_classes.length++;
 
-    return class_file;
+    return classe;
 }
 
 Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
@@ -89,6 +83,20 @@ Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
         if (!strcmp(nome, nome_temp) && !strcmp(descritor, descritor_temp))
         {
             return (classe->methods + i);
+        }
+    }
+
+    return NULL;
+}
+
+ClassFile *busca_classe(char *nome_classe)
+{
+    for (uint32_t i = 0; i < lista_classes.length; i++)
+    {
+        char* nome_classe_temp = read_nome_classe(lista_classes.classes[i]);
+        if (!strcmp(nome_classe, nome_classe_temp))
+        {
+            return lista_classes.classes[i];
         }
     }
 
