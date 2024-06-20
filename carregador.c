@@ -4,7 +4,7 @@
 #include "includes/utils.h"
 #include "includes/frame.h"
 
-char* classpath;
+char *classpath;
 
 void inicializa_carregador(char *cp)
 {
@@ -40,6 +40,12 @@ ClassFile *carrega_classe(char *nome_classe)
             printf("ERRO: classe %s nao encontrada\n", nome_classe);
             exit(1);
         }
+    }
+
+    if (classe->super_class)
+    {
+        char *super_classe = read_super_classe(classe);
+        carrega_classe(super_classe);
     }
 
     Method *clinit = busca_metodo(classe, "<clinit>", "()V");
@@ -93,7 +99,7 @@ ClassFile *busca_classe(char *nome_classe)
 {
     for (uint32_t i = 0; i < lista_classes.length; i++)
     {
-        char* nome_classe_temp = read_nome_classe(lista_classes.classes[i]);
+        char *nome_classe_temp = read_nome_classe(lista_classes.classes[i]);
         if (!strcmp(nome_classe, nome_classe_temp))
         {
             return lista_classes.classes[i];
