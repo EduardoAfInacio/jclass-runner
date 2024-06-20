@@ -37,7 +37,6 @@ ClassFile* class_reader(char* nomeClass) {
   file = fopen(nomeClass, "rb");
 
   if (file == NULL) {
-    printf("Arquivo não encontrado! Erro ao abrir o arquivo!\n");
     return 0;
   }
 

@@ -6,7 +6,8 @@
         "frame.h": "c",
         "instrucao.h": "c",
         "system_error": "c",
-        "area_metodos.h": "c"
+        "area_metodos.h": "c",
+        "carregador.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

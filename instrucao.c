@@ -787,7 +787,7 @@ void inicializa_instrucoes()
     instrucoes[192].bytes = 2;
 
     instrucoes[193].nome = "instanceof";
-    instrucoes[193].exec = &instanceof;
+    instrucoes[193].exec = & instanceof ;
     instrucoes[193].bytes = 2;
 
     // instrucoes[194].nome = "monitorenter";
@@ -965,7 +965,7 @@ void ldc()
         break;
 
     case CONSTANT_String:
-        int32_t indice_utf = get_utf(get_frame_atual()->constant_pool, indice - 1);
+        int32_t indice_utf = get_utf(frame_atual->constant_pool, indice);
         push_operando(indice_utf);
         break;
 
@@ -995,7 +995,7 @@ void ldc_w()
         break;
 
     case CONSTANT_String:
-        int32_t indice_utf = get_utf(get_frame_atual()->constant_pool, indice - 1);
+        int32_t indice_utf = get_utf(get_frame_atual()->constant_pool, indice);
         push_operando(indice_utf);
         break;
 
@@ -3293,6 +3293,23 @@ void jvm_return()
 
 void getstatic()
 {
+    Frame *frame_atual = get_frame_atual();
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint16_t indice = concat16(byte1, byte2);
+    uint16_t indice_classe = frame_atual->constant_pool[indice - 1].info.Fieldref.class_index;
+    uint16_t indice_nome_tipo = frame_atual->constant_pool[indice - 1].info.Fieldref.name_and_type_index;
+    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
+    char *nome_field = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
+    char *descritor_field = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
+
+    if (!strcmp(nome_classe, "java/lang/System") && !strcmp(nome_field, "out") && !strcmp(descritor_field, "Ljava/io/PrintStream;"))
+    {
+        push_operando(0);
+        atualiza_pc();
+        return;
+    }
+
     printf("ERRO: getstatic não implementada\n");
     exit(1);
 }
@@ -3374,12 +3391,26 @@ void invokevirtual()
     Frame *frame_atual = get_frame_atual();
     uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
     uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
-    uint16_t inidice_metodo = concat16(byte1, byte2);
-    uint16_t indice_classe = frame_atual->constant_pool[inidice_metodo - 1].info.Methodref.class_index;
-    uint16_t indice_nome_tipo = frame_atual->constant_pool[inidice_metodo - 1].info.Methodref.name_and_type_index;
-    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[inidice_metodo - 1].info.Class.name_index);
+    uint16_t indice_metodo = concat16(byte1, byte2);
+    uint16_t indice_classe = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.class_index;
+    uint16_t indice_nome_tipo = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.name_and_type_index;
+    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
     char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
     char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
+
+    if (!strcmp(nome_classe, "java/io/PrintStream") && !strcmp(nome_metodo, "println"))
+    {
+        if (!strcmp(descritor_metodo, "(Ljava/lang/String;)V"))
+        {
+            uint32_t indice = pop_operando();
+            char* valor = read_string_cp(frame_atual->constant_pool, indice);
+            printf("%s\n", valor);
+        }
+
+        atualiza_pc();
+        return;
+    }
+
     ClassFile *classe = carrega_classe(nome_classe);
     Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
 
@@ -3415,18 +3446,18 @@ void invokevirtual()
 
 void invokespecial()
 {
-    Method *metodo;
     Frame *frame_atual = get_frame_atual();
     uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
-    uint8_t byte2 = frame_atual->code[frame_atual->pc + 1];
-    uint16_t indice = concat16(byte1, byte2);
-    uint32_t indice_classe = frame_atual->constant_pool[indice - 1].info.Methodref.class_index;
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint16_t indice_metodo = concat16(byte1, byte2);
+    uint16_t indice_classe = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.class_index;
+    uint16_t indice_nome_tipo = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.name_and_type_index;
     char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
+    char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
+    char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
+
     ClassFile *classe = carrega_classe(nome_classe);
-    uint16_t nome_tipo_indice = frame_atual->constant_pool[indice - 1].info.Methodref.name_and_type_index;
-    char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.name_index);
-    char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.descriptor_index);
-    metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
 
     if (metodo == NULL)
     {
@@ -3460,18 +3491,24 @@ void invokespecial()
 
 void invokestatic()
 {
-    Method *metodo;
     Frame *frame_atual = get_frame_atual();
     uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
-    uint8_t byte2 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
     uint16_t indice = concat16(byte1, byte2);
-    uint32_t indice_classe = frame_atual->constant_pool[indice - 1].info.Methodref.class_index;
-    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
-    ClassFile *classe = carrega_classe(nome_classe);
+    uint16_t indice_classe = frame_atual->constant_pool[indice - 1].info.Methodref.class_index;
     uint16_t nome_tipo_indice = frame_atual->constant_pool[indice - 1].info.Methodref.name_and_type_index;
+    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
     char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.name_index);
     char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.descriptor_index);
-    metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+
+    if (!strcmp(nome_classe, "java/lang/Object") && !strcmp(nome_metodo, "registerNatives") && !strcmp(descritor_metodo, "()V"))
+    {
+        atualiza_pc();
+        return;
+    }
+
+    ClassFile *classe = carrega_classe(nome_classe);
+    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
 
     if (metodo == NULL)
     {
@@ -3505,18 +3542,17 @@ void invokestatic()
 
 void invokeinterface()
 {
-    Method *metodo;
     Frame *frame_atual = get_frame_atual();
     uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
-    uint8_t byte2 = frame_atual->code[frame_atual->pc + 1];
-    uint16_t indice = concat16(byte1, byte2);
-    uint32_t indice_classe = frame_atual->constant_pool[indice - 1].info.Methodref.class_index;
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint16_t indice_metodo = concat16(byte1, byte2);
+    uint16_t indice_classe = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.class_index;
+    uint16_t indice_nome_tipo = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.name_and_type_index;
     char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
+    char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
+    char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
     ClassFile *classe = carrega_classe(nome_classe);
-    uint16_t nome_tipo_indice = frame_atual->constant_pool[indice - 1].info.Methodref.name_and_type_index;
-    char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.name_index);
-    char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.descriptor_index);
-    metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
 
     if (metodo == NULL)
     {

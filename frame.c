@@ -52,10 +52,15 @@ Frame *get_frame_atual()
 void executa_frame_atual()
 {
     Frame *frame_atual;
-
     do
     {
         frame_atual = get_frame_atual();
+
+        printf("--------------------------\n");
+        printf("PC: %d\n", frame_atual->pc);
+        printf("Instrucao: %s\n", instrucoes[frame_atual->code[frame_atual->pc]].nome);
+        printf("--------------------------\n\n");
+
         instrucoes[frame_atual->code[frame_atual->pc]].exec();
     } while (frame_atual->pc < frame_atual->code_length);
 
@@ -108,5 +113,5 @@ int32_t pop_operando()
 void atualiza_pc()
 {
     Frame *frame_atual = get_frame_atual();
-    frame_atual->pc = instrucoes[frame_atual->pc].bytes + 1;
+    frame_atual->pc += instrucoes[frame_atual->code[frame_atual->pc]].bytes + 1;
 }

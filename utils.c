@@ -23,25 +23,27 @@ int64_t double_to_int(double valor)
     return retorno;
 }
 
-int32_t get_utf(ConstantPool *cp, int32_t pos_pool)
+int32_t get_utf(ConstantPool *constant_pool, int32_t indice)
 {
-    uint8_t tag = cp[pos_pool].tag;
+    uint8_t tag = constant_pool[indice - 1].tag;
 
     if (tag == CONSTANT_Utf8)
     {
-        return pos_pool;
+        return indice;
     }
 
     switch (tag)
     {
     case CONSTANT_Class:
-        return get_utf(cp, cp[pos_pool].info.Class.name_index - 1);
+        return get_utf(constant_pool, constant_pool[indice - 1].info.Class.name_index);
     case CONSTANT_String:
-        return get_utf(cp, cp[pos_pool].info.String.string_index - 1);
     case CONSTANT_Integer:
-        return get_utf(cp, cp[pos_pool].info.String.string_index - 1);
     case CONSTANT_Float:
-        return get_utf(cp, cp[pos_pool].info.String.string_index - 1);
+        return get_utf(constant_pool, constant_pool[indice - 1].info.String.string_index);
+    
+    default:
+        printf("ERRO: get_utf nao implementada para tag %d\n", tag);
+        exit(1);
     }
 }
 
@@ -110,4 +112,11 @@ int32_t get_numero_parametros(ClassFile *classe, Method *metodo)
     }
 
     return parametros;
+}
+
+char* read_nome_classe(ClassFile *classe)
+{
+    uint16_t indice_classe = classe->this_class;
+    uint16_t indice_nome_classe = classe->constant_pool[indice_classe - 1].info.Class.name_index;
+    return read_string_cp(classe->constant_pool, indice_nome_classe); 
 }

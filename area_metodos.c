@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "includes/utils.h"
+#include "includes/carregador.h"
 
 ListaArray lista_arrays;
 ListaClasse lista_classes;
@@ -9,7 +10,7 @@ ListaClasse lista_classes;
 void inicializa_lista_classes()
 {
     lista_classes.classes = (ClassFile **)calloc(1, sizeof(ClassFile *));
-    lista_classes.classes[0] = class_reader("classpath/java/lang/Object.class");
+    lista_classes.classes[0] = carrega_classe("java/lang/Object");
     lista_classes.length = 1;
 }
 
