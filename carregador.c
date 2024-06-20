@@ -4,6 +4,13 @@
 #include "includes/utils.h"
 #include "includes/frame.h"
 
+char* classpath;
+
+void inicializa_carregador(char *cp)
+{
+    classpath = cp;
+}
+
 ClassFile *carrega_classe(char *nome_classe)
 {
     ClassFile *classe = busca_classe(nome_classe);
@@ -13,17 +20,26 @@ ClassFile *carrega_classe(char *nome_classe)
         return classe;
     }
 
-    char *caminho = calloc(16 + strlen(nome_classe), sizeof(char));
-    strcpy(caminho, "classpath/");
-    strcat(caminho, nome_classe);
+    char *caminho = calloc(strlen(classpath) + strlen(nome_classe) + 7, sizeof(char));
+    strcpy(caminho, nome_classe);
     strcat(caminho, ".class");
 
     classe = class_reader(caminho);
 
     if (!classe)
     {
-        printf("ERRO: classe %s nao encontrada\n", nome_classe);
-        exit(1);
+        strcpy(caminho, classpath);
+        strcat(caminho, "/");
+        strcat(caminho, nome_classe);
+        strcat(caminho, ".class");
+
+        classe = class_reader(caminho);
+
+        if (!classe)
+        {
+            printf("ERRO: classe %s nao encontrada\n", nome_classe);
+            exit(1);
+        }
     }
 
     Method *clinit = busca_metodo(classe, "<clinit>", "()V");
@@ -38,10 +54,11 @@ ClassFile *carrega_classe(char *nome_classe)
     lista_classes.classes[lista_classes.length] = classe;
     lista_classes.length++;
 
+    free(caminho);
     return classe;
 }
 
-ClassFile *carrega_classe_fora_classpath(char *caminho_classe)
+ClassFile *carrega_classe_inicial(char *caminho_classe)
 {
     ClassFile *classe = class_reader(caminho_classe);
 
@@ -53,24 +70,7 @@ ClassFile *carrega_classe_fora_classpath(char *caminho_classe)
 
     char *nome_classe = read_nome_classe(classe);
 
-    if(busca_classe(nome_classe))
-    {
-        return classe;
-    }
-
-    Method *clinit = busca_metodo(classe, "<clinit>", "()V");
-
-    if (clinit)
-    {
-        push_frame(classe->constant_pool, clinit);
-        executa_frame_atual();
-    }
-
-    lista_classes.classes = realloc(lista_classes.classes, sizeof(ClassFile *) * lista_classes.length + 1);
-    lista_classes.classes[lista_classes.length] = classe;
-    lista_classes.length++;
-
-    return classe;
+    return carrega_classe(nome_classe);
 }
 
 Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
