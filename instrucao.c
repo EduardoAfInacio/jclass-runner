@@ -782,13 +782,13 @@ void inicializa_instrucoes()
     // instrucoes[191].exec = &athrow;
     // instrucoes[191].bytes = 0;
 
-    // instrucoes[192].nome = "checkcast";
-    // instrucoes[192].exec = &checkcast;
-    // instrucoes[192].bytes = 2;
+    instrucoes[192].nome = "checkcast";
+    instrucoes[192].exec = &checkcast;
+    instrucoes[192].bytes = 2;
 
-    // instrucoes[193].nome = "instanceof";
-    // instrucoes[193].exec = &instanceof;
-    // instrucoes[193].bytes = 2;
+    instrucoes[193].nome = "instanceof";
+    instrucoes[193].exec = &instanceof;
+    instrucoes[193].bytes = 2;
 
     // instrucoes[194].nome = "monitorenter";
     // instrucoes[194].exec = &monitorenter;
@@ -821,18 +821,6 @@ void inicializa_instrucoes()
     instrucoes[201].nome = "jsr_w";
     instrucoes[201].exec = &jsr_w;
     instrucoes[201].bytes = 4;
-
-    // instrucoes[202].nome = "breakpoint";
-    // instrucoes[202].exec = &breakpoint;
-    // instrucoes[202].bytes = 0;
-
-    // instrucoes[254].nome = "impdep1";
-    // instrucoes[254].exec = &impdep1;
-    // instrucoes[254].bytes = 0;
-
-    // instrucoes[255].nome = "impdep2";
-    // instrucoes[255].exec = &impdep2;
-    // instrucoes[255].bytes = 0;
 }
 
 void nop()
@@ -3652,59 +3640,61 @@ void arraylength()
     exit(1);
 }
 
-// void checkcast(){
-// 	int16_t indice;
-// 	int8_t offset1,offset2;
+void checkcast()
+{
+    Frame *frame_atual = get_frame_atual();
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint16_t indice = concat16(byte1, byte2);
 
-// 	offset1 =  get_frame_atual()->code[(get_frame_atual()->pc)+1];
-// 	offset2 =  get_frame_atual()->code[(get_frame_atual()->pc)+2];
+    Objeto *objeto = (Objeto *)(intptr_t)pop_operando();
 
-// 	indice = (offset1 << 8) | offset2;
+    if (objeto == NULL)
+    {
+        printf("Objeto nulo!\n");
+    }
 
-// 	objeto* objeto = (struct objeto*) pop_op();
+    char *nome_classe_objeto = read_string_cp(objeto->classe->constant_pool, objeto->classe->constant_pool[objeto->classe->this_class].info.Class.name_index);
+    char *nome_classe_cp = read_string_cp(frame_atual->constant_pool, indice);
 
-// 	if(objeto == NULL){
-// 		printf("Objeto nulo!\n");
-// 	}
+    if (strcmp(nome_classe_objeto, nome_classe_cp) != 0)
+    {
+        printf("ERRO: checkcast inválido\n");
+        exit(1);
+    }
 
-// 	char* nomeClasse = retornaNomeClasse(objeto->classe);
+    push_operando((intptr_t)objeto);
+    atualiza_pc();
+}
 
-// 	char* nomeIndice = retornaNome(get_frame_atual()->classe,indice);
+void instanceof ()
+{
+    Frame *frame_atual = get_frame_atual();
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint16_t indice = concat16(byte1, byte2);
 
-// 	if(strcmp(nomeClasse,nomeIndice) == 0){
-// 		printf("Objeto é do tipo: %s\n",nomeIndice);
-// 	}
+    Objeto *objeto = (Objeto *)(intptr_t)pop_operando();
 
-// 	push_pilha_operandos((int32_t)objeto);
-// 	atualizaPc();
-// }
+    if (objeto == NULL)
+    {
+        printf("Objeto nulo!\n");
+    }
 
-// void instanceof(){
-// 	int16_t indice;
-// 	int8_t offset1,offset2;
+    char *nome_classe_objeto = read_string_cp(objeto->classe->constant_pool, objeto->classe->constant_pool[objeto->classe->this_class].info.Class.name_index);
+    char *nome_classe_cp = read_string_cp(frame_atual->constant_pool, indice);
 
-// 	offset1 =  get_frame_atual()->code[(get_frame_atual()->pc)+1];
-// 	offset2 =  get_frame_atual()->code[(get_frame_atual()->pc)+2];
+    if (strcmp(nome_classe_objeto, nome_classe_cp) == 0)
+    {
+        push_operando(1);
+    }
+    else
+    {
+        push_operando(0);
+    }
 
-// 	indice = (offset1 << 8) | offset2;
-
-// 	objeto* objeto = (struct objeto*) pop_op();
-
-// 	if(objeto == NULL){
-// 		printf("Objeto nulo!\n");
-// 		push_pilha_operandos(0);
-// 	}
-
-// 	char* nomeClasse = retornaNomeClasse(objeto->classe);
-
-// 	char* nomeIndice = retornaNome(get_frame_atual()->classe,indice);
-
-// 	if(strcmp(nomeClasse,nomeIndice) == 0){
-// 		printf("Objeto é do tipo: %s\n",nomeIndice);
-// 		push_pilha_operandos(1);
-// 	}
-// 	atualizaPc();
-// }
+    atualiza_pc();
+}
 
 void wide()
 {
@@ -3735,47 +3725,52 @@ void ifnull()
 void ifnonnull()
 {
     Frame *frame_atual = get_frame_atual();
-	uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
     uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
-	uint16_t offset = concat16(byte1, byte2);
-	int32_t valor = pop_operando();
+    uint16_t offset = concat16(byte1, byte2);
+    int32_t valor = pop_operando();
 
-	if(valor != 0){
-		get_frame_atual()->pc += offset;
-	}else{
-		atualiza_pc();
-	}
+    if (valor != 0)
+    {
+        get_frame_atual()->pc += offset;
+    }
+    else
+    {
+        atualiza_pc();
+    }
 }
 
-void goto_w(){
+void goto_w()
+{
     Frame *frame_atual = get_frame_atual();
-	uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
-	uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
-	uint8_t byte3 = frame_atual->code[frame_atual->pc + 3];
-	uint8_t byte4 = frame_atual->code[frame_atual->pc + 4];
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint8_t byte3 = frame_atual->code[frame_atual->pc + 3];
+    uint8_t byte4 = frame_atual->code[frame_atual->pc + 4];
     int32_t deslocamento;
 
-	deslocamento  = (byte1 & 0xFF)<<24;
-	deslocamento |= (byte2 & 0xFF)<<16;
-	deslocamento |= (byte3 & 0xFF)<<8;
-	deslocamento |= (byte4 & 0xFF);
+    deslocamento = (byte1 & 0xFF) << 24;
+    deslocamento |= (byte2 & 0xFF) << 16;
+    deslocamento |= (byte3 & 0xFF) << 8;
+    deslocamento |= (byte4 & 0xFF);
 
-	frame_atual->pc += deslocamento;
+    frame_atual->pc += deslocamento;
 }
 
-void jsr_w(){
-	Frame *frame_atual = get_frame_atual();
-	uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
-	uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
-	uint8_t byte3 = frame_atual->code[frame_atual->pc + 3];
-	uint8_t byte4 = frame_atual->code[frame_atual->pc + 4];
+void jsr_w()
+{
+    Frame *frame_atual = get_frame_atual();
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint8_t byte3 = frame_atual->code[frame_atual->pc + 3];
+    uint8_t byte4 = frame_atual->code[frame_atual->pc + 4];
     int32_t deslocamento;
 
-	deslocamento  = (byte1 & 0xFF)<<24;
-	deslocamento |= (byte2 & 0xFF)<<16;
-	deslocamento |= (byte3 & 0xFF)<<8;
-	deslocamento |= (byte4 & 0xFF);
+    deslocamento = (byte1 & 0xFF) << 24;
+    deslocamento |= (byte2 & 0xFF) << 16;
+    deslocamento |= (byte3 & 0xFF) << 8;
+    deslocamento |= (byte4 & 0xFF);
 
     push_operando(frame_atual->pc + 5);
-	frame_atual->pc += deslocamento;
+    frame_atual->pc += deslocamento;
 }
