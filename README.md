@@ -13,5 +13,5 @@ make all
 Para executar o programa:
 
 ```
-./build/main <caminho para o arquivo .class>
+./jclass-runner <caminho para o arquivo .class>
 ```

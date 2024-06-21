@@ -1,6 +1,5 @@
 /build
-
 *.class
-
+*.java
 jclass-runner
-HelloWorld.java
+!classpath/java/**

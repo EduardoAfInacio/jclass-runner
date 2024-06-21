@@ -26,7 +26,7 @@ int main(int argc, char *args[])
       cp = args[3];
       break;
     }
-  
+
   default:
     printf("Por favor, execute o programa no formato:\n./jclass-runner <caminho/arquivo.class> [-cp <classpath>]\n");
     return 1;
@@ -39,5 +39,19 @@ int main(int argc, char *args[])
   inicializa_lista_classes();
   inicializa_lista_arrays();
 
-  carrega_classe_inicial(caminho_classe);
+  ClassFile *classe = carrega_classe_inicial(caminho_classe);
+  Method *metodo = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
+
+  if (!metodo)
+  {
+    printf("ERRO: declare o método \"public static void main(String[] args)\" em uma das classes.\n");
+    return 1;
+  }
+
+  carregado = true;
+
+  for (uint32_t i = 0; i < pilha_frame->length; i++)
+  {
+    executa_frame_atual();
+  }
 }

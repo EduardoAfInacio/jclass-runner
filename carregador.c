@@ -5,6 +5,7 @@
 #include "includes/frame.h"
 
 char *classpath;
+bool carregado = false;
 
 void inicializa_carregador(char *cp)
 {
@@ -53,7 +54,10 @@ ClassFile *carrega_classe(char *nome_classe)
     if (clinit)
     {
         push_frame(classe->constant_pool, clinit);
-        executa_frame_atual();
+        if (carregado)
+        {
+            executa_frame_atual();
+        }
     }
 
     lista_classes.classes = realloc(lista_classes.classes, sizeof(ClassFile *) * lista_classes.length + 1);
@@ -92,7 +96,14 @@ Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
         }
     }
 
-    return NULL;
+    ClassFile *super_classe = busca_super_classe(classe);
+
+    if (!super_classe)
+    {
+        return NULL;
+    }
+
+    return busca_metodo(super_classe, nome, descritor);
 }
 
 ClassFile *busca_classe(char *nome_classe)
@@ -107,4 +118,16 @@ ClassFile *busca_classe(char *nome_classe)
     }
 
     return NULL;
+}
+
+ClassFile *busca_super_classe(ClassFile *classe)
+{
+    char *nome_super_classe = read_super_classe(classe);
+
+    if (!nome_super_classe)
+    {
+        return NULL;
+    }
+
+    return busca_classe(nome_super_classe);
 }

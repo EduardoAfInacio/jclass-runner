@@ -124,6 +124,12 @@ char* read_nome_classe(ClassFile *classe)
 char* read_super_classe(ClassFile *classe)
 {
     uint16_t indice_super_classe = classe->super_class;
+
+    if (!indice_super_classe)
+    {
+        return NULL;
+    }
+
     uint16_t indice_nome_super_classe = classe->constant_pool[indice_super_classe - 1].info.Class.name_index;
     return read_string_cp(classe->constant_pool, indice_nome_super_classe); 
 }
