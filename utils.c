@@ -47,15 +47,15 @@ int32_t get_utf(ConstantPool *constant_pool, int32_t indice)
     }
 }
 
-int16_t concat16(int8_t byte1, int8_t byte2)
+uint16_t concat16(uint8_t byte1, uint8_t byte2)
 {
-    int16_t aux = byte1;
+    uint16_t aux = byte1;
     return (aux << 8) | byte2;
 }
 
-int64_t concat64(int32_t int1, int32_t int2)
+uint64_t concat64(uint32_t int1, uint32_t int2)
 {
-    int64_t aux = int1;
+    uint64_t aux = int1;
     return (aux << 32) | int2;
 }
 

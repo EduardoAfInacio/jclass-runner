@@ -1827,8 +1827,6 @@ void ladd()
     int64_t valor1 = concat64(mais_significativos1, menos_significativos1);
     int64_t valor2 = concat64(mais_significativos2, menos_significativos2);
 
-    printf("%lld e %lld\n", valor1, valor2);
-
     Wide wide = divide_64(valor2 + valor1);
 
     push_operando(wide.mais_significativo);
