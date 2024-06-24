@@ -758,10 +758,6 @@ void inicializa_instrucoes()
     instrucoes[185].exec = &invokeinterface;
     instrucoes[185].bytes = 4;
 
-    // instrucoes[186].nome = "invokedynamic";
-    // instrucoes[186].exec = &invokedynamic;
-    // instrucoes[186].bytes = 4;
-
     instrucoes[187].nome = "new";
     instrucoes[187].exec = &jvm_new;
     instrucoes[187].bytes = 2;
@@ -778,9 +774,9 @@ void inicializa_instrucoes()
     instrucoes[190].exec = &arraylength;
     instrucoes[190].bytes = 0;
 
-    // instrucoes[191].nome = "athrow";
-    // instrucoes[191].exec = &athrow;
-    // instrucoes[191].bytes = 0;
+    instrucoes[191].nome = "athrow";
+    instrucoes[191].exec = &athrow;
+    instrucoes[191].bytes = 0;
 
     instrucoes[192].nome = "checkcast";
     instrucoes[192].exec = &checkcast;
@@ -790,13 +786,13 @@ void inicializa_instrucoes()
     instrucoes[193].exec = & instanceof ;
     instrucoes[193].bytes = 2;
 
-    // instrucoes[194].nome = "monitorenter";
-    // instrucoes[194].exec = &monitorenter;
-    // instrucoes[194].bytes = 0;
+    instrucoes[194].nome = "monitorenter";
+    instrucoes[194].exec = &monitorenter;
+    instrucoes[194].bytes = 0;
 
-    // instrucoes[195].nome = "monitorexit";
-    // instrucoes[195].exec = &monitorexit;
-    // instrucoes[195].bytes = 0;
+    instrucoes[195].nome = "monitorexit";
+    instrucoes[195].exec = &monitorexit;
+    instrucoes[195].bytes = 0;
 
     instrucoes[196].nome = "wide";
     instrucoes[196].exec = &wide;
@@ -3455,15 +3451,15 @@ void invokevirtual()
     }
 
     ClassFile *classe = carrega_classe(nome_classe);
-    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+    MethodRef *metodo_ref = busca_metodo(classe, nome_metodo, descritor_metodo);
 
-    if (metodo == NULL)
+    if (metodo_ref == NULL)
     {
         printf("ERRO: Método não econtrado!\n");
         exit(1);
     }
 
-    int32_t numero_parametros = get_numero_parametros(classe, metodo);
+    int32_t numero_parametros = get_numero_parametros(metodo_ref->classe, metodo_ref->metodo);
     int32_t *fields = calloc(sizeof(int32_t), numero_parametros + 1);
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3471,7 +3467,7 @@ void invokevirtual()
         fields[i] = pop_operando();
     }
 
-    push_frame(classe->constant_pool, metodo);
+    push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
     frame_atual = get_frame_atual();
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3483,6 +3479,7 @@ void invokevirtual()
 
     executa_frame_atual();
 
+    free(metodo_ref);
     atualiza_pc();
     return;
 }
@@ -3500,15 +3497,15 @@ void invokespecial()
     char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
 
     ClassFile *classe = carrega_classe(nome_classe);
-    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+    MethodRef *metodo_ref = busca_metodo(classe, nome_metodo, descritor_metodo);
 
-    if (metodo == NULL)
+    if (metodo_ref == NULL)
     {
         printf("ERRO: Método não econtrado!\n");
         exit(1);
     }
 
-    int32_t numero_parametros = get_numero_parametros(classe, metodo);
+    int32_t numero_parametros = get_numero_parametros(metodo_ref->classe, metodo_ref->metodo);
     int32_t *fields = calloc(sizeof(int32_t), numero_parametros + 1);
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3516,7 +3513,7 @@ void invokespecial()
         fields[i] = pop_operando();
     }
 
-    push_frame(classe->constant_pool, metodo);
+    push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
     frame_atual = get_frame_atual();
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3528,6 +3525,7 @@ void invokespecial()
 
     executa_frame_atual();
 
+    free(metodo_ref);
     atualiza_pc();
     return;
 }
@@ -3551,15 +3549,15 @@ void invokestatic()
     }
 
     ClassFile *classe = carrega_classe(nome_classe);
-    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+    MethodRef *metodo_ref = busca_metodo(classe, nome_metodo, descritor_metodo);
 
-    if (metodo == NULL)
+    if (metodo_ref == NULL)
     {
         printf("ERRO: Método não econtrado!\n");
         exit(1);
     }
 
-    int32_t numero_parametros = get_numero_parametros(classe, metodo);
+    int32_t numero_parametros = get_numero_parametros(metodo_ref->classe, metodo_ref->metodo);
     int32_t *fields = calloc(sizeof(int32_t), numero_parametros + 1);
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3567,7 +3565,7 @@ void invokestatic()
         fields[i] = pop_operando();
     }
 
-    push_frame(classe->constant_pool, metodo);
+    push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
     frame_atual = get_frame_atual();
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3579,6 +3577,7 @@ void invokestatic()
 
     executa_frame_atual();
 
+    free(metodo_ref);
     atualiza_pc();
     return;
 }
@@ -3595,15 +3594,15 @@ void invokeinterface()
     char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
     char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
     ClassFile *classe = carrega_classe(nome_classe);
-    Method *metodo = busca_metodo(classe, nome_metodo, descritor_metodo);
+    MethodRef *metodo_ref = busca_metodo(classe, nome_metodo, descritor_metodo);
 
-    if (metodo == NULL)
+    if (metodo_ref == NULL)
     {
         printf("ERRO: Método não econtrado!\n");
         exit(1);
     }
 
-    int32_t numero_parametros = get_numero_parametros(classe, metodo);
+    int32_t numero_parametros = get_numero_parametros(metodo_ref->classe, metodo_ref->metodo);
     int32_t *fields = calloc(sizeof(int32_t), numero_parametros + 1);
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3611,7 +3610,7 @@ void invokeinterface()
         fields[i] = pop_operando();
     }
 
-    push_frame(classe->constant_pool, metodo);
+    push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
     frame_atual = get_frame_atual();
 
     for (int32_t i = 0; i <= numero_parametros; i++)
@@ -3623,6 +3622,7 @@ void invokeinterface()
 
     executa_frame_atual();
 
+    free(metodo_ref);
     atualiza_pc();
     return;
 }
@@ -3719,6 +3719,11 @@ void arraylength()
     exit(1);
 }
 
+void athrow()
+{
+    atualiza_pc();
+}
+
 void checkcast()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3775,12 +3780,50 @@ void instanceof ()
     atualiza_pc();
 }
 
+void monitorenter()
+{
+    atualiza_pc();
+}
+
+void monitorexit()
+{
+    atualiza_pc();
+}
+
 void wide()
 {
 }
 
 void multianewarray()
 {
+    Frame *frame_atual = get_frame_atual();
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint8_t dimensoes = frame_atual->code[frame_atual->pc + 3];
+    uint16_t indice_classe = concat16(byte1, byte2);
+    uint16_t indice_nome_classe = frame_atual->constant_pool[indice_classe - 1].info.Class.name_index;
+    char *nome_classe = read_string_cp(frame_atual->constant_pool, indice_nome_classe);
+
+    char* type_value = NULL;
+    int i = 0;
+    while (nome_classe[i] == '[')
+        i++;
+    char *nome_classe_limpo = calloc(strlen(nome_classe) - (i + 2), sizeof(char));
+    
+    for (int j = i; j < strlen(nome_classe); j++)
+    {
+        nome_classe_limpo[j - i] = nome_classe[j - i];
+    }
+
+    if (nome_classe[i] == 'L')
+    {
+        if (strcmp(nome_classe_limpo, "java/lang/String"))
+        {
+            carrega_classe(nome_classe_limpo);
+        }
+        
+        type_value = nome_classe_limpo;
+    }
 }
 
 void ifnull()

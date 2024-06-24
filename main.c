@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "includes/frame.h"
 #include "includes/carregador.h"
@@ -40,9 +41,8 @@ int main(int argc, char *args[])
   inicializa_lista_arrays();
 
   ClassFile *classe = carrega_classe_inicial(caminho_classe);
-  Method *metodo = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
-
-  if (!metodo)
+  MethodRef *metodo_ref = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
+  if (!metodo_ref)
   {
     printf("ERRO: declare o método \"public static void main(String[] args)\" em uma das classes.\n");
     return 1;
@@ -54,4 +54,11 @@ int main(int argc, char *args[])
   {
     executa_frame_atual();
   }
+
+  push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
+
+  executa_frame_atual();
+
+  free(metodo_ref);
+  return 0;
 }
