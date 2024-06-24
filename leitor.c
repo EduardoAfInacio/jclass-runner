@@ -1,28 +1,9 @@
 /**
- *@file
- *@section DESCRIPTION
- *Universidade de Brasilia
- *
- *Matheus Barbosa e Silva - 190113987\n
- *Plínio Candide Rios Mayer - 180129562\n
- *William Xavier dos Santos - 190075384\n
- *Eduardo Afonso da Silva Inácio - 221033920\n
- *Marcus Paulo Kaller Vargas - 200041096\n\n
- *
- * Software Basico - 1/2024\n
- * Professor: Marcelo Ladeira\n\n
- *
- * Este arquivo contém as funções responsáveis por ler e interpretar o conteúdo 
- * de arquivos .class, conforme especificado pela estrutura da Java Virtual Machine (JVM).
- * As funções aqui definidas são capazes de desmontar o arquivo .class e reconstruir 
- * suas estruturas internas em memória, permitindo análises e manipulações.
- *
- * Para redirecionar a saída de informações do arquivo .class processado para um arquivo 
- * de texto, execute o programa da seguinte forma:
- * ./jvm.exe [nome do arquivo].class > log.txt
- *
- * A saída será salva em 'log.txt', contendo detalhes sobre as estruturas internas do arquivo,
- * como a pool de constantes, métodos, campos, entre outros componentes essenciais.
+ * @file leitor.c
+ * @brief Implementa as funções de leitura de arquivos de classe Java (.class).
+ * Este arquivo é responsável por ler e decodificar os dados binários de um arquivo .class,
+ * construindo uma representação em memória da classe, incluindo métodos, campos, constant pool,
+ * e outras estruturas internas.
  */
 
 #include "./includes/leitor.h"
@@ -32,6 +13,11 @@
 
 #include "./includes/exibidor.h"
 
+/**
+ * @brief Lê e processa um arquivo .class, construindo a estrutura de dados ClassFile.
+ * @param nomeClass Nome do arquivo .class a ser lido.
+ * @return Ponteiro para a estrutura ClassFile carregada, ou NULL em caso de falha na abertura do arquivo.
+ */
 ClassFile* class_reader(char* nomeClass) {
   FILE* file;
   file = fopen(nomeClass, "rb");
@@ -57,6 +43,11 @@ ClassFile* class_reader(char* nomeClass) {
   return classfile;
 }
 
+/**
+ * @brief Lê e armazena as informações gerais do arquivo .class no objeto ClassFile.
+ * @param classfile Estrutura de dados onde as informações serão armazenadas.
+ * @param file Ponteiro para o arquivo .class aberto.
+ */
 void general_info(ClassFile* classfile, FILE* file) {
   classfile->magic = read_four_bytes(file);
   if (classfile->magic != 0xCAFEBABE) {
@@ -68,6 +59,12 @@ void general_info(ClassFile* classfile, FILE* file) {
   classfile->constant_pool_count = read_two_bytes(file);
 }
 
+
+/**
+ * @brief Lê o pool de constantes de um arquivo .class e armazena no objeto ClassFile.
+ * @param classfile Estrutura de dados onde o pool de constantes será armazenado.
+ * @param file Ponteiro para o arquivo .class aberto.
+ */
 void constant_pool(ClassFile* classfile, FILE* file) {
   classfile->constant_pool =
       (ConstantPool*)malloc((classfile->constant_pool_count - 1) * sizeof(ConstantPool));
@@ -131,6 +128,12 @@ void constant_pool(ClassFile* classfile, FILE* file) {
   }
 }
 
+/**
+ * @brief Lê informações sobre interfaces do arquivo .class.
+ * @param classfile Estrutura de dados ClassFile onde as interfaces serão armazenadas.
+ * @param file Ponteiro para o arquivo .class aberto.
+ * @param interfaces_count Número de interfaces a serem lidas.
+ */
 void interfaceInfo(ClassFile* classfile, FILE* file, uint16_t interfaces_count) {
   if (interfaces_count == 0)
     return;
@@ -143,6 +146,13 @@ void interfaceInfo(ClassFile* classfile, FILE* file, uint16_t interfaces_count) 
   }
 }
 
+
+/**
+ * @brief Lê informações sobre os campos de um arquivo .class e os armazena na estrutura ClassFile.
+ * @param classfile Estrutura de dados ClassFile onde os campos serão armazenados.
+ * @param file Ponteiro para o arquivo .class aberto.
+ * @param fields_count Número de campos a serem lidos.
+ */
 void fieldInfo(ClassFile* classfile, FILE* file, uint16_t fields_count) {
   if (fields_count == 0)
     return;
@@ -169,6 +179,12 @@ void fieldInfo(ClassFile* classfile, FILE* file, uint16_t fields_count) {
   }
 }
 
+/**
+ * @brief Lê informações sobre métodos de um arquivo .class e os armazena na estrutura ClassFile.
+ * @param classfile Estrutura de dados ClassFile onde os métodos serão armazenados.
+ * @param file Ponteiro para o arquivo .class aberto.
+ * @param methods_count Número de métodos a serem lidos.
+ */
 void methodInfo(ClassFile* classfile, FILE* file, uint16_t methods_count) {
   uint16_t name_ind;
   uint32_t att_len;
@@ -229,8 +245,14 @@ void methodInfo(ClassFile* classfile, FILE* file, uint16_t methods_count) {
   }
 }
 
-void read_exc(ExceptionAttribute** exc_atrb, uint16_t name_ind,
-              uint32_t att_len, FILE* file) {
+/**
+ * @brief Lê um atributo de exceção de um arquivo .class.
+ * @param exc_atrb Ponteiro para o atributo de exceção que será lido.
+ * @param name_ind Índice do nome do atributo no pool de constantes.
+ * @param att_len Comprimento do atributo de exceção.
+ * @param file Ponteiro para o arquivo .class aberto.
+ */
+void read_exc(ExceptionAttribute** exc_atrb, uint16_t name_ind, uint32_t att_len, FILE* file) {
   (*exc_atrb)->name_index = name_ind;
   (*exc_atrb)->length = att_len;
 
@@ -244,8 +266,14 @@ void read_exc(ExceptionAttribute** exc_atrb, uint16_t name_ind,
   }
 }
 
-void read_code(CodeAttribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
-               FILE* file) {
+/**
+ * @brief Lê um atributo de código de um arquivo .class.
+ * @param cd_atrb Ponteiro para o atributo de código que será lido.
+ * @param name_ind Índice do nome do atributo no pool de constantes.
+ * @param att_len Comprimento do atributo de código.
+ * @param file Ponteiro para o arquivo .class aberto.
+ */
+void read_code(CodeAttribute** cd_atrb, uint16_t name_ind, uint32_t att_len, FILE* file) {
   int posicao_inicial = ftell(file);
 
   (*cd_atrb)->name_index = name_ind;
@@ -279,7 +307,11 @@ void read_code(CodeAttribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
   }
 }
 
-
+/**
+ * @brief Salva as instruções de bytecode de um atributo de código.
+ * @param cd_atrb Ponteiro para o atributo de código que contém as instruções a serem salvas.
+ * @param file Ponteiro para o arquivo .class aberto.
+ */
 void save_instructions(CodeAttribute** cd_atrb, FILE* file) {
   int opcode, pos_referencia;
   int bytes_preench, offsets;
@@ -419,6 +451,12 @@ void save_instructions(CodeAttribute** cd_atrb, FILE* file) {
   }
 }
 
+/**
+ * @brief Lê informações de atributos adicionais de um arquivo .class.
+ * @param classfile Estrutura de dados ClassFile onde os atributos serão armazenados.
+ * @param file Ponteiro para o arquivo .class aberto.
+ * @param attributes_count Número de atributos a serem lidos.
+ */
 void attributeInfo(ClassFile* classfile, FILE* file, uint16_t attributes_count) {
   if (attributes_count == 0)
     return;
@@ -439,6 +477,11 @@ void attributeInfo(ClassFile* classfile, FILE* file, uint16_t attributes_count) 
   }
 }
 
+/**
+ * @brief Lê informações gerais adicionais do arquivo .class.
+ * @param classfile Estrutura de dados ClassFile onde as informações adicionais serão armazenadas.
+ * @param file Ponteiro para o arquivo .class aberto.
+ */
 void secondGeneralInfo(ClassFile* classfile, FILE* file) {
   classfile->access_flags = read_two_bytes(file);
   classfile->this_class = read_two_bytes(file);
@@ -456,18 +499,32 @@ void secondGeneralInfo(ClassFile* classfile, FILE* file) {
   attributeInfo(classfile, file, classfile->attributes_count);
 }
 
+/**
+ * @brief Lê um byte do arquivo.
+ * @param fp Ponteiro para o arquivo de onde o byte será lido.
+ * @return O byte lido.
+ */
 static inline uint8_t read_one_byte(FILE* fp) {
   uint8_t ret = getc(fp);
   return ret;
 }
 
-
+/**
+ * @brief Lê dois bytes do arquivo e os combina em um uint16_t.
+ * @param fp Ponteiro para o arquivo de onde os bytes serão lidos.
+ * @return O uint16_t formado pelos dois bytes lidos.
+ */
 static inline uint16_t read_two_bytes(FILE* fp) {
   uint16_t ret = getc(fp);
   ret = (ret << 8) | (getc(fp));
   return ret;
 }
 
+/**
+ * @brief Lê quatro bytes do arquivo e os combina em um uint32_t.
+ * @param fp Ponteiro para o arquivo de onde os bytes serão lidos.
+ * @return O uint32_t formado pelos quatro bytes lidos.
+ */
 static inline uint32_t read_four_bytes(FILE* fp) {
   uint32_t ret = getc(fp);
   ret = (ret << 8) | (getc(fp));

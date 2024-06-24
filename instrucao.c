@@ -1,3 +1,10 @@
+/**
+ * @file instrucao.c
+ * @brief Define e implementa o conjunto de instruções da JVM. Este arquivo contém a implementação
+ * de todas as instruções do bytecode Java que podem ser executadas pela JVM, manipulando o estado
+ * da máquina virtual conforme necessário para cada tipo de instrução.
+ */
+
 #include "includes/instrucao.h"
 #include "includes/frame.h"
 #include "includes/utils.h"
@@ -10,6 +17,11 @@
 
 Instrucao instrucoes[NUM_INSTRUCOES];
 
+/**
+ * @brief Inicializa o vetor de instruções que a JVM irá utilizar para executar bytecodes.
+ * Cada posição do vetor contém o nome da instrução, o ponteiro para a função que executa a instrução,
+ * e o número de bytes adicionais que a instrução usa.
+ */
 void inicializa_instrucoes()
 {
     instrucoes[0].nome = "nop";
@@ -823,17 +835,27 @@ void inicializa_instrucoes()
     instrucoes[201].bytes = 4;
 }
 
+/**
+ * @brief Função que simula a execução do bytecode 'nop' na JVM.
+ * Essencialmente não realiza operação alguma e é usada para avançar o contador de programa.
+ */
 void nop()
 {
     atualiza_pc();
 }
 
+/**
+ * @brief Empilha um valor nulo (null) na pilha de operandos do frame atual.
+ */
 void aconst_null()
 {
     push_operando(0);
     atualiza_pc();
 }
 
+/**
+ * @brief Empilha constantes inteiras de -1 a 5 na pilha de operandos do frame atual.
+ */
 void iconst_m1()
 {
     push_operando(-1);
@@ -876,6 +898,9 @@ void iconst_5()
     atualiza_pc();
 }
 
+/**
+ * @brief Empilha constantes longas 0 e 1 na pilha de operandos do frame atual.
+ */
 void lconst_0()
 {
     Wide wide = divide_64(0);
@@ -892,6 +917,9 @@ void lconst_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Empilha constantes de ponto flutuante 0.0, 1.0 e 2.0 na pilha de operandos do frame atual.
+ */
 void fconst_0()
 {
     push_operando(float_to_int(0.0));
@@ -910,6 +938,9 @@ void fconst_2()
     atualiza_pc();
 }
 
+/**
+ * @brief Empilha constantes double 0.0 e 1.0 na pilha de operandos do frame atual.
+ */
 void dconst_0()
 {
     Wide wide = divide_64(double_to_int(0.0));
@@ -926,6 +957,10 @@ void dconst_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Função que simula a instrução 'bipush' da JVM.
+ * Empilha um byte imediato como um inteiro na pilha de operandos do frame atual.
+ */
 void bipush()
 {
     Frame *frame_atual = get_frame_atual();
@@ -936,6 +971,10 @@ void bipush()
     atualiza_pc();
 }
 
+/**
+ * @brief Função que simula a instrução 'sipush' da JVM.
+ * Empilha um short imediato como um inteiro na pilha de operandos do frame atual.
+ */
 void sipush()
 {
     Frame *frame_atual = get_frame_atual();
@@ -948,6 +987,9 @@ void sipush()
     atualiza_pc();
 }
 
+/**
+ * @brief Função que simula a instrução 'ldc' da JVM para carregar constantes de um índice no pool de constantes.
+ */
 void ldc()
 {
     Frame *frame_atual = get_frame_atual();
@@ -978,6 +1020,9 @@ void ldc()
     atualiza_pc();
 }
 
+/**
+ * @brief Função que simula a instrução 'ldc_w' da JVM, similar ao 'ldc' mas com um índice wide (mais amplo).
+ */
 void ldc_w()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1008,6 +1053,10 @@ void ldc_w()
     atualiza_pc();
 }
 
+
+/**
+ * @brief Função que simula a instrução 'ldc2_w' da JVM para carregar constantes longas e double do pool de constantes.
+ */
 void ldc2_w()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1042,6 +1091,10 @@ void ldc2_w()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um inteiro de uma variável local especificada e empilha na pilha de operandos do frame atual.
+ * Funções similares são definidas para tipos long, float, double e referência.
+ */
 void iload()
 {
     ;
@@ -1097,6 +1150,10 @@ void aload()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro da pilha de operandos em uma variável local especificada.
+ * Funções similares são definidas para tipos long, float, double e referência.
+ */
 void iload_0()
 {
     push_operando(get_frame_atual()->fields[0]);
@@ -1273,6 +1330,9 @@ void aload_3()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um inteiro de um array referenciado pelo índice na pilha de operandos.
+ */
 void iaload()
 {
     int32_t indice = pop_operando();
@@ -1282,6 +1342,9 @@ void iaload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um long de um array referenciado pelo índice na pilha de operandos, envolvendo duas posições do array.
+ */
 void laload()
 {
     int32_t indice = pop_operando();
@@ -1292,6 +1355,9 @@ void laload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um float de um array referenciado pelo índice na pilha de operandos.
+ */
 void faload()
 {
     int32_t indice = pop_operando();
@@ -1301,6 +1367,9 @@ void faload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um double de um array referenciado pelo índice na pilha de operandos, envolvendo duas posições do array.
+ */
 void daload()
 {
     int32_t indice = pop_operando();
@@ -1311,6 +1380,9 @@ void daload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega uma referência de um array referenciado pelo índice na pilha de operandos.
+ */
 void aaload()
 {
 
@@ -1321,6 +1393,9 @@ void aaload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um byte de um array de bytes referenciado pelo índice na pilha de operandos e o expande para o tipo inteiro.
+ */
 void baload()
 {
     int32_t indice = pop_operando();
@@ -1330,6 +1405,9 @@ void baload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um char de um array de chars referenciado pelo índice na pilha de operandos e o expande para o tipo inteiro.
+ */
 void caload()
 {
     int32_t indice = pop_operando();
@@ -1339,6 +1417,9 @@ void caload()
     atualiza_pc();
 }
 
+/**
+ * @brief Carrega um short de um array de shorts referenciado pelo índice na pilha de operandos e o expande para o tipo inteiro.
+ */
 void saload()
 {
 
@@ -1349,6 +1430,9 @@ void saload()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro da pilha de operandos em uma variável local especificada.
+ */
 void istore()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1358,6 +1442,9 @@ void istore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um long da pilha de operandos em duas posições consecutivas de variáveis locais, começando pela especificada.
+ */
 void lstore()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1371,6 +1458,9 @@ void lstore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um float da pilha de operandos em uma variável local especificada.
+ */
 void fstore()
 {
 
@@ -1381,6 +1471,9 @@ void fstore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um double da pilha de operandos em duas posições consecutivas de variáveis locais, começando pela especificada.
+ */
 void dstore()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1394,6 +1487,9 @@ void dstore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena uma referência da pilha de operandos em uma variável local especificada.
+ */
 void astore()
 {
 
@@ -1404,6 +1500,9 @@ void astore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro da pilha de operandos na primeira variável local.
+ */
 void istore_0()
 {
 
@@ -1413,6 +1512,9 @@ void istore_0()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro da pilha de operandos na segunda variável local.
+ */
 void istore_1()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1421,6 +1523,9 @@ void istore_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro da pilha de operandos na terceira variável local.
+ */
 void istore_2()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1429,6 +1534,9 @@ void istore_2()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro da pilha de operandos na quarta variável local.
+ */
 void istore_3()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1437,6 +1545,9 @@ void istore_3()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um long da pilha de operandos começando pela primeira variável local.
+ */
 void lstore_0()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1450,6 +1561,9 @@ void lstore_0()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um long da pilha de operandos começando pela segunda variável local.
+ */
 void lstore_1()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1463,6 +1577,9 @@ void lstore_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um long da pilha de operandos começando pela terceira variável local.
+ */
 void lstore_2()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1476,6 +1593,9 @@ void lstore_2()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um long da pilha de operandos começando pela quarta variável local.
+ */
 void lstore_3()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1489,6 +1609,9 @@ void lstore_3()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um float da pilha de operandos na primeira variável local.
+ */
 void fstore_0()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1497,6 +1620,10 @@ void fstore_0()
     atualiza_pc();
 }
 
+
+/**
+ * @brief Armazena um float da pilha de operandos na segunda variável local.
+ */
 void fstore_1()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1505,6 +1632,9 @@ void fstore_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um float da pilha de operandos na terceira variável local.
+ */
 void fstore_2()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1513,6 +1643,9 @@ void fstore_2()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um float da pilha de operandos na quarta variável local.
+ */
 void fstore_3()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1521,6 +1654,9 @@ void fstore_3()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um double da pilha de operandos começando pela primeira variável local.
+ */
 void dstore_0()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1534,6 +1670,9 @@ void dstore_0()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um double da pilha de operandos começando pela segunda variável local.
+ */
 void dstore_1()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1547,6 +1686,9 @@ void dstore_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um double da pilha de operandos começando pela terceira variável local.
+ */
 void dstore_2()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1560,6 +1702,9 @@ void dstore_2()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um double da pilha de operandos começando pela quarta variável local.
+ */
 void dstore_3()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1573,6 +1718,9 @@ void dstore_3()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena uma referência da pilha de operandos na primeira variável local.
+ */
 void astore_0()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1581,6 +1729,9 @@ void astore_0()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena uma referência da pilha de operandos na segunda variável local.
+ */
 void astore_1()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1589,6 +1740,9 @@ void astore_1()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena uma referência da pilha de operandos na terceira variável local.
+ */
 void astore_2()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1597,6 +1751,9 @@ void astore_2()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena uma referência da pilha de operandos na quarta variável local.
+ */
 void astore_3()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1605,6 +1762,9 @@ void astore_3()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um inteiro em um array de inteiros referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void iastore()
 {
     int32_t valor = pop_operando();
@@ -1615,6 +1775,9 @@ void iastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um long em um array de longs referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void lastore()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1629,6 +1792,9 @@ void lastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um float em um array de floats referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void fastore()
 {
     int32_t valor = pop_operando();
@@ -1639,6 +1805,9 @@ void fastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um double em um array de doubles referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void dastore()
 {
     Frame *frame_atual = get_frame_atual();
@@ -1653,6 +1822,9 @@ void dastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena uma referência em um array de referências referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void aastore()
 {
     int32_t valor = pop_operando();
@@ -1663,6 +1835,9 @@ void aastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um byte em um array de bytes referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void bastore()
 {
     int8_t valor = pop_operando();
@@ -1673,6 +1848,9 @@ void bastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um char em um array de chars referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void castore()
 {
 
@@ -1684,6 +1862,9 @@ void castore()
     atualiza_pc();
 }
 
+/**
+ * @brief Armazena um short em um array de shorts referenciado, usando um índice e valor fornecidos pela pilha de operandos.
+ */
 void sastore()
 {
 
@@ -1695,6 +1876,9 @@ void sastore()
     atualiza_pc();
 }
 
+/**
+ * @brief Remove o elemento do topo da pilha de operandos.
+ */
 void pop()
 {
     pop_operando();
@@ -1702,6 +1886,9 @@ void pop()
     atualiza_pc();
 }
 
+/**
+ * @brief Remove os dois elementos do topo da pilha de operandos.
+ */
 void pop2()
 {
 
@@ -1711,6 +1898,9 @@ void pop2()
     atualiza_pc();
 }
 
+/**
+ * @brief Duplica o elemento no topo da pilha de operandos.
+ */
 void dup()
 {
     int32_t valor = pop_operando();
@@ -1720,6 +1910,9 @@ void dup()
     atualiza_pc();
 }
 
+/**
+ * @brief Duplica o elemento no topo da pilha de operandos e insere duas posições abaixo.
+ */
 void dup_x1()
 {
     int32_t valor1 = pop_operando();
@@ -1734,6 +1927,9 @@ void dup_x1()
     atualiza_pc();
 }
 
+/**
+ * @brief Duplica o elemento no topo da pilha de operandos e insere três posições abaixo.
+ */
 void dup_x2()
 {
 
@@ -1749,6 +1945,9 @@ void dup_x2()
     atualiza_pc();
 }
 
+/**
+ * @brief Duplica os dois elementos no topo da pilha de operandos.
+ */
 void dup2()
 {
 
@@ -1763,6 +1962,9 @@ void dup2()
     atualiza_pc();
 }
 
+/**
+ * @brief Duplica os dois elementos no topo da pilha de operandos e insere três posições abaixo.
+ */
 void dup2_x1()
 {
 
@@ -1779,6 +1981,9 @@ void dup2_x1()
     atualiza_pc();
 }
 
+/**
+ * @brief Duplica os dois elementos no topo da pilha de operandos e insere quatro posições abaixo.
+ */
 void dup2_x2()
 {
     int32_t menos_significativos = pop_operando();
@@ -1796,6 +2001,9 @@ void dup2_x2()
     atualiza_pc();
 }
 
+/**
+ * @brief Troca os dois elementos no topo da pilha de operandos.
+ */
 void swap()
 {
     int32_t valor1 = pop_operando();
@@ -1807,6 +2015,9 @@ void swap()
     atualiza_pc();
 }
 
+/**
+ * @brief Adiciona dois inteiros do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void iadd()
 {
     int32_t valor1 = pop_operando();
@@ -1817,6 +2028,9 @@ void iadd()
     atualiza_pc();
 }
 
+/**
+ * @brief Adiciona dois longs do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void ladd()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -1835,6 +2049,9 @@ void ladd()
     atualiza_pc();
 }
 
+/**
+ * @brief Adiciona dois floats do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void fadd()
 {
     float valor_f1, valor_f2, resultado;
@@ -1855,6 +2072,10 @@ void fadd()
     atualiza_pc();
 }
 
+
+/**
+ * @brief Adiciona dois doubles do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void dadd()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -1883,6 +2104,9 @@ void dadd()
     atualiza_pc();
 }
 
+/**
+ * @brief Subtrai o segundo inteiro do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void isub()
 {
     int32_t valor1 = pop_operando();
@@ -1893,6 +2117,9 @@ void isub()
     atualiza_pc();
 }
 
+/**
+ * @brief Subtrai o segundo long do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void lsub()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -1911,6 +2138,9 @@ void lsub()
     atualiza_pc();
 }
 
+/**
+ * @brief Subtrai o segundo float do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void fsub()
 {
     float valor_f1, valor_f2, resultado;
@@ -1931,6 +2161,9 @@ void fsub()
     atualiza_pc();
 }
 
+/**
+ * @brief Subtrai o segundo double do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void dsub()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -1959,6 +2192,9 @@ void dsub()
     atualiza_pc();
 }
 
+/**
+ * @brief Multiplica dois inteiros do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void imul()
 {
     int32_t valor1 = pop_operando();
@@ -1969,6 +2205,9 @@ void imul()
     atualiza_pc();
 }
 
+/**
+ * @brief Multiplica dois longs do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void lmul()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -1987,6 +2226,9 @@ void lmul()
     atualiza_pc();
 }
 
+/**
+ * @brief Multiplica dois floats do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void fmul()
 {
     float valor_f1, valor_f2, resultado;
@@ -2007,6 +2249,10 @@ void fmul()
     atualiza_pc();
 }
 
+
+/**
+ * @brief Multiplica dois doubles do topo da pilha de operandos e empurra o resultado de volta para a pilha.
+ */
 void dmul()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -2035,6 +2281,9 @@ void dmul()
     atualiza_pc();
 }
 
+/**
+ * @brief Divide o segundo inteiro do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void idiv()
 {
     int32_t valor1 = pop_operando();
@@ -2045,6 +2294,9 @@ void idiv()
     atualiza_pc();
 }
 
+/**
+ * @brief Divide o segundo long do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void jvm_ldiv()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -2063,6 +2315,9 @@ void jvm_ldiv()
     atualiza_pc();
 }
 
+/**
+ * @brief Divide o segundo float do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void fdiv()
 {
     float valor_f1, valor_f2, resultado;
@@ -2083,6 +2338,9 @@ void fdiv()
     atualiza_pc();
 }
 
+/**
+ * @brief Divide o segundo double do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void ddiv()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -2111,6 +2369,9 @@ void ddiv()
     atualiza_pc();
 }
 
+/**
+ * @brief Calcula o resto da divisão do segundo inteiro do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void irem()
 {
     int32_t valor1 = pop_operando();
@@ -2120,6 +2381,9 @@ void irem()
     atualiza_pc();
 }
 
+/**
+ * @brief Calcula o resto da divisão do segundo long do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void lrem()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -2138,6 +2402,10 @@ void lrem()
     atualiza_pc();
 }
 
+
+/**
+ * @brief Calcula o resto da divisão do segundo float do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void frem()
 {
     float valor_f1, valor_f2, resultado;
@@ -2158,6 +2426,9 @@ void frem()
     atualiza_pc();
 }
 
+/**
+ * @brief Calcula o resto da divisão do segundo double do topo da pilha pelo primeiro e empurra o resultado de volta para a pilha.
+ */
 void jvm_drem()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -2186,6 +2457,10 @@ void jvm_drem()
     atualiza_pc();
 }
 
+
+/**
+ * @brief Inverte o sinal do inteiro no topo da pilha.
+ */
 void ineg()
 {
     int32_t valor = pop_operando();
@@ -2193,6 +2468,9 @@ void ineg()
     atualiza_pc();
 }
 
+/**
+ * @brief Inverte o sinal do long no topo da pilha.
+ */
 void lneg()
 {
     int32_t menos_significativos = pop_operando();
@@ -2209,6 +2487,9 @@ void lneg()
     atualiza_pc();
 }
 
+/**
+ * @brief Inverte o sinal do float no topo da pilha.
+ */
 void fneg()
 {
     float valor_f;
@@ -2227,6 +2508,9 @@ void fneg()
     atualiza_pc();
 }
 
+/**
+ * @brief Inverte o sinal do double no topo da pilha.
+ */
 void dneg()
 {
     double valor_d;
@@ -2251,6 +2535,9 @@ void dneg()
     atualiza_pc();
 }
 
+/**
+ * @brief Executa um deslocamento à esquerda no inteiro do topo da pilha pelo número de posições especificadas no segundo elemento do topo.
+ */
 void ishl()
 {
     int32_t shift = pop_operando() & 0x1f;
@@ -2260,6 +2547,9 @@ void ishl()
     atualiza_pc();
 }
 
+/**
+ * @brief Executa um deslocamento à esquerda no long do topo da pilha pelo número de posições especificadas no segundo elemento do topo.
+ */
 void lshl()
 {
     int32_t shift = pop_operando() & 0x3f;
@@ -2275,6 +2565,9 @@ void lshl()
     atualiza_pc();
 }
 
+/**
+ * @brief Executa um deslocamento à direita no inteiro do topo da pilha pelo número de posições especificadas no segundo elemento do topo.
+ */
 void ishr()
 {
     int32_t shift = pop_operando() & 0x1f;
@@ -2284,6 +2577,9 @@ void ishr()
     atualiza_pc();
 }
 
+/**
+ * @brief Executa um deslocamento à direita no long do topo da pilha pelo número de posições especificadas no segundo elemento do topo.
+ */
 void lshr()
 {
     int32_t shift = pop_operando() & 0x3f;
@@ -2299,6 +2595,9 @@ void lshr()
     atualiza_pc();
 }
 
+/**
+ * @brief Executa um deslocamento à direita sem sinal no inteiro do topo da pilha pelo número de posições especificadas no segundo elemento do topo.
+ */
 void iushr()
 {
 
@@ -2309,6 +2608,9 @@ void iushr()
     atualiza_pc();
 }
 
+/**
+ * @brief Executa um deslocamento à direita sem sinal no long do topo da pilha pelo número de posições especificadas no segundo elemento do topo.
+ */
 void lushr()
 {
     int32_t shift = pop_operando() & 0x3f;
@@ -2324,6 +2626,9 @@ void lushr()
     atualiza_pc();
 }
 
+/**
+ * @brief Realiza uma operação AND bit a bit entre dois inteiros no topo da pilha e empurra o resultado de volta para a pilha.
+ */
 void iand()
 {
     int32_t valor1 = pop_operando();
@@ -2333,6 +2638,9 @@ void iand()
     atualiza_pc();
 }
 
+/**
+ * @brief Realiza uma operação AND bit a bit entre dois longs no topo da pilha e empurra o resultado de volta para a pilha.
+ */
 void land()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -2351,6 +2659,9 @@ void land()
     atualiza_pc();
 }
 
+/**
+ * @brief Realiza uma operação OR bit a bit entre dois inteiros no topo da pilha e empurra o resultado de volta para a pilha.
+ */
 void ior()
 {
     int32_t valor1 = pop_operando();
@@ -2360,6 +2671,9 @@ void ior()
     atualiza_pc();
 }
 
+/**
+ * @brief Realiza uma operação OR bit a bit entre dois longs no topo da pilha e empurra o resultado de volta para a pilha.
+ */
 void lor()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -2378,6 +2692,9 @@ void lor()
     atualiza_pc();
 }
 
+/**
+ * @brief Realiza uma operação XOR bit a bit entre dois inteiros no topo da pilha e empurra o resultado de volta para a pilha.
+ */
 void ixor()
 {
     int32_t valor1 = pop_operando();
@@ -2387,6 +2704,9 @@ void ixor()
     atualiza_pc();
 }
 
+/**
+ * @brief Realiza uma operação XOR bit a bit entre dois longs no topo da pilha e empurra o resultado de volta para a pilha.
+ */
 void lxor()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -2405,6 +2725,9 @@ void lxor()
     atualiza_pc();
 }
 
+/**
+ * @brief Incrementa uma variável local inteira por uma constante.
+ */
 void iinc()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2415,6 +2738,9 @@ void iinc()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um inteiro para um long e empurra o resultado para a pilha.
+ */
 void i2l()
 {
     int32_t valor = pop_operando();
@@ -2428,6 +2754,9 @@ void i2l()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um inteiro para um float e empurra o resultado para a pilha.
+ */
 void i2f()
 {
     int32_t valor = pop_operando();
@@ -2440,6 +2769,9 @@ void i2f()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um inteiro para um double e empurra o resultado para a pilha.
+ */
 void i2d()
 {
     int32_t valor = pop_operando();
@@ -2456,6 +2788,9 @@ void i2d()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um long para um inteiro e empurra o resultado para a pilha.
+ */
 void l2i()
 {
     int32_t menos_significativo = pop_operando();
@@ -2465,6 +2800,9 @@ void l2i()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um long para um float e empurra o resultado para a pilha.
+ */
 void l2f()
 {
     int32_t menos_significativo = pop_operando();
@@ -2479,6 +2817,9 @@ void l2f()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um long para um double e empurra o resultado para a pilha.
+ */
 void l2d()
 {
     int32_t menos_significativo = pop_operando();
@@ -2495,6 +2836,9 @@ void l2d()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um float para um inteiro e empurra o resultado para a pilha.
+ */
 void f2i()
 {
     int32_t valor = pop_operando();
@@ -2508,6 +2852,9 @@ void f2i()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um float para um long e empurra o resultado para a pilha.
+ */
 void f2l()
 {
     int32_t valor = pop_operando();
@@ -2525,6 +2872,9 @@ void f2l()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um float para um double e empurra o resultado para a pilha.
+ */
 void f2d()
 {
     int32_t valor = pop_operando();
@@ -2545,6 +2895,9 @@ void f2d()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um double para um inteiro e empurra o resultado para a pilha.
+ */
 void d2i()
 {
     int32_t menos_significativo = pop_operando();
@@ -2558,6 +2911,9 @@ void d2i()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um double para um long e empurra o resultado para a pilha.
+ */
 void d2l()
 {
     int32_t menos_significativo = pop_operando();
@@ -2576,6 +2932,9 @@ void d2l()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um double para um float e empurra o resultado para a pilha.
+ */
 void d2f()
 {
     int32_t menos_significativo = pop_operando();
@@ -2595,6 +2954,9 @@ void d2f()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um inteiro para um byte e empurra o resultado para a pilha.
+ */
 void i2b()
 {
     int32_t valor = pop_operando();
@@ -2605,6 +2967,9 @@ void i2b()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um inteiro para um char e empurra o resultado para a pilha.
+ */
 void i2c()
 {
     int32_t valor = pop_operando();
@@ -2615,6 +2980,9 @@ void i2c()
     atualiza_pc();
 }
 
+/**
+ * @brief Converte um inteiro para um short e empurra o resultado para a pilha.
+ */
 void i2s()
 {
     int32_t valor = pop_operando();
@@ -2625,6 +2993,9 @@ void i2s()
     atualiza_pc();
 }
 
+/**
+ * @brief Compara dois longs na pilha e empurra -1, 0, ou 1 se o segundo long é menor, igual, ou maior que o primeiro, respectivamente.
+ */
 void lcmp()
 {
     int32_t menos_significativos1 = pop_operando();
@@ -2651,6 +3022,9 @@ void lcmp()
     atualiza_pc();
 }
 
+/**
+ * @brief Compara dois floats na pilha e empurra -1, 0, ou 1 se o segundo float é menor, igual, ou maior que o primeiro, respectivamente. Retorna -1 para NaN.
+ */
 void fcmpl()
 {
     float valor_f1, valor_f2;
@@ -2678,6 +3052,9 @@ void fcmpl()
     }
 }
 
+/**
+ * @brief Compara dois floats na pilha e empurra -1, 0, ou 1 se o segundo float é menor, igual, ou maior que o primeiro, respectivamente. Retorna 1 para NaN.
+ */
 void fcmpg()
 {
     float valor_f1, valor_f2;
@@ -2705,6 +3082,9 @@ void fcmpg()
     }
 }
 
+/**
+ * @brief Compara dois doubles na pilha e empurra -1, 0, ou 1 se o segundo double é menor, igual, ou maior que o primeiro, respectivamente. Retorna -1 para NaN.
+ */
 void dcmpl()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -2743,6 +3123,9 @@ void dcmpl()
     atualiza_pc();
 }
 
+/**
+ * @brief Compara dois doubles na pilha e empurra -1, 0, ou 1 se o segundo double é menor, igual, ou maior que o primeiro, respectivamente. Retorna 1 para NaN.
+ */
 void dcmpg()
 {
     double valor_d1, valor_d2, resultado_d;
@@ -2781,6 +3164,9 @@ void dcmpg()
     atualiza_pc();
 }
 
+/**
+ * @brief Salta para um determinado offset se o valor no topo da pilha é zero.
+ */
 void ifeq()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2799,6 +3185,9 @@ void ifeq()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o valor no topo da pilha não é zero.
+ */
 void ifne()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2817,6 +3206,9 @@ void ifne()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o valor no topo da pilha é menor que zero.
+ */
 void iflt()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2835,6 +3227,9 @@ void iflt()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o valor no topo da pilha é maior ou igual a zero.
+ */
 void ifge()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2853,6 +3248,9 @@ void ifge()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o valor no topo da pilha é maior que zero.
+ */
 void ifgt()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2871,6 +3269,9 @@ void ifgt()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o valor no topo da pilha é menor ou igual a zero.
+ */
 void ifle()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2889,6 +3290,9 @@ void ifle()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se os dois valores inteiros no topo da pilha são iguais.
+ */
 void if_icmpeq()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2908,6 +3312,9 @@ void if_icmpeq()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se os dois valores inteiros no topo da pilha não são iguais.
+ */
 void if_icmpne()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2927,6 +3334,9 @@ void if_icmpne()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o segundo valor inteiro no topo da pilha é menor que o primeiro.
+ */
 void if_icmplt()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2946,6 +3356,9 @@ void if_icmplt()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o segundo valor inteiro no topo da pilha é maior ou igual ao primeiro.
+ */
 void if_icmpge()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2965,6 +3378,9 @@ void if_icmpge()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o segundo valor inteiro no topo da pilha é maior que o primeiro.
+ */
 void if_icmpgt()
 {
     Frame *frame_atual = get_frame_atual();
@@ -2984,6 +3400,9 @@ void if_icmpgt()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se o segundo valor inteiro no topo da pilha é menor ou igual ao primeiro.
+ */
 void if_icmple()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3003,6 +3422,9 @@ void if_icmple()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se os dois valores de referência no topo da pilha são iguais.
+ */
 void if_acmpeq()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3022,6 +3444,9 @@ void if_acmpeq()
     }
 }
 
+/**
+ * @brief Salta para um determinado offset se os dois valores de referência no topo da pilha não são iguais.
+ */
 void if_acmpne()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3041,6 +3466,9 @@ void if_acmpne()
     }
 }
 
+/**
+ * @brief Realiza um salto incondicional para um determinado offset.
+ */
 void jvm_goto()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3051,6 +3479,9 @@ void jvm_goto()
     frame_atual->pc += offset;
 }
 
+/**
+ * @brief Salta para um sub-rotina em um determinado offset e empurra o endereço de retorno para a pilha.
+ */
 void jsr()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3062,6 +3493,9 @@ void jsr()
     frame_atual->pc += offset;
 }
 
+/**
+ * @brief Retorna de uma sub-rotina e continua a execução do endereço no topo da pilha.
+ */
 void ret()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3069,6 +3503,9 @@ void ret()
     frame_atual->pc = frame_atual->fields[indice];
 }
 
+/**
+ * @brief Executa um salto baseado em uma chave de tabela de switch, salta para um endereço baseado no índice fornecido.
+ */
 void tableswitch()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3143,6 +3580,9 @@ void tableswitch()
     frame_atual->pc = pc_novo;
 }
 
+/**
+ * @brief Executa um salto baseado em uma chave de lookup switch, salta para um endereço específico ou padrão dependendo da chave fornecida.
+ */
 void lookupswitch()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3211,6 +3651,9 @@ void lookupswitch()
     frame_atual->pc = pc_novo;
 }
 
+/**
+ * @brief Retorna um inteiro do método atual e o coloca no frame do chamador.
+ */
 void ireturn()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3224,6 +3667,9 @@ void ireturn()
     frame_atual->pc = frame_atual->code_length;
 }
 
+/**
+ * @brief Retorna um long do método atual e o coloca no frame do chamador.
+ */
 void lreturn()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3241,6 +3687,9 @@ void lreturn()
     frame_atual->pc = frame_atual->code_length;
 }
 
+/**
+ * @brief Retorna um float do método atual e o coloca no frame do chamador.
+ */
 void freturn()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3254,6 +3703,9 @@ void freturn()
     frame_atual->pc = frame_atual->code_length;
 }
 
+/**
+ * @brief Retorna um double do método atual e o coloca no frame do chamador.
+ */
 void dreturn()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3271,6 +3723,9 @@ void dreturn()
     frame_atual->pc = frame_atual->code_length;
 }
 
+/**
+ * @brief Retorna uma referência do método atual e a coloca no frame do chamador.
+ */
 void areturn()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3284,12 +3739,18 @@ void areturn()
     frame_atual->pc = frame_atual->code_length;
 }
 
+/**
+ * @brief Retorna do método atual sem retornar um valor.
+ */
 void jvm_return()
 {
     Frame *frame_atual = get_frame_atual();
     frame_atual->pc = frame_atual->code_length;
 }
 
+/**
+ * @brief Recupera um valor estático de uma classe específica e empurra para a pilha.
+ */
 void getstatic()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3313,12 +3774,19 @@ void getstatic()
     exit(1);
 }
 
+
+/**
+ * @brief Armazena um valor estático em uma classe específica.
+ */
 void putstatic()
 {
     printf("ERRO: putstatic não implementada\n");
     exit(1);
 }
 
+/**
+ * @brief Recupera o campo de um objeto e empurra o valor para a pilha.
+ */
 void getfield()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3349,6 +3817,9 @@ void getfield()
     atualiza_pc();
 }
 
+/**
+ * @brief Define o valor de um campo em um objeto.
+ */
 void putfield()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3385,6 +3856,9 @@ void putfield()
     atualiza_pc();
 }
 
+/**
+ * @brief Invoca um método de instância de um objeto.
+ */
 void invokevirtual()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3487,6 +3961,9 @@ void invokevirtual()
     return;
 }
 
+/**
+ * @brief Invoca um método especial de uma instância.
+ */
 void invokespecial()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3532,6 +4009,9 @@ void invokespecial()
     return;
 }
 
+/**
+ * @brief Invoca um método estático de uma classe.
+ */
 void invokestatic()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3583,6 +4063,9 @@ void invokestatic()
     return;
 }
 
+/**
+ * @brief Invoca um método de uma interface.
+ */
 void invokeinterface()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3627,6 +4110,9 @@ void invokeinterface()
     return;
 }
 
+/**
+ * @brief Cria uma nova instância de uma classe e empurra uma referência para ela na pilha.
+ */
 void jvm_new()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3646,6 +4132,9 @@ void jvm_new()
     atualiza_pc();
 }
 
+/**
+ * @brief Cria um novo array de primitivos e empurra uma referência para ele na pilha.
+ */
 void newarray()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3682,6 +4171,9 @@ void newarray()
     atualiza_pc();
 }
 
+/**
+ * @brief Cria um novo array de referências e empurra uma referência para ele na pilha.
+ */
 void anewarray()
 {
 
@@ -3698,6 +4190,9 @@ void anewarray()
     atualiza_pc();
 }
 
+/**
+ * @brief Empurra o comprimento de um array na pilha.
+ */
 void arraylength()
 {
 
@@ -3719,6 +4214,9 @@ void arraylength()
     exit(1);
 }
 
+/**
+ * @brief Verifica se um objeto é de um determinado tipo e lança uma exceção se não for.
+ */
 void checkcast()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3746,6 +4244,9 @@ void checkcast()
     atualiza_pc();
 }
 
+/**
+ * @brief Determina se um objeto é da instância de uma classe e empurra o resultado (1 ou 0) na pilha.
+ */
 void instanceof ()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3775,14 +4276,24 @@ void instanceof ()
     atualiza_pc();
 }
 
+/**
+ * @brief Extensão para suportar instruções com larguras de operandos maiores.
+ */
 void wide()
 {
 }
 
+
+/**
+ * @brief Cria um novo array multidimensional.
+ */
 void multianewarray()
 {
 }
 
+/**
+ * @brief Pula para um endereço se a referência no topo da pilha for nula.
+ */
 void ifnull()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3801,6 +4312,9 @@ void ifnull()
     }
 }
 
+/**
+ * @brief Pula para um endereço se a referência no topo da pilha não for nula.
+ */
 void ifnonnull()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3819,6 +4333,9 @@ void ifnonnull()
     }
 }
 
+/**
+ * @brief Executa um salto incondicional para um endereço longo (wide index).
+ */
 void goto_w()
 {
     Frame *frame_atual = get_frame_atual();
@@ -3836,6 +4353,9 @@ void goto_w()
     frame_atual->pc += deslocamento;
 }
 
+/**
+ * @brief Salta para uma sub-rotina em um endereço longo e empurra o endereço de retorno.
+ */
 void jsr_w()
 {
     Frame *frame_atual = get_frame_atual();

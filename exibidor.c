@@ -1,37 +1,21 @@
 /**
- *@file
- *@section DESCRIPTION
- *Universidade de Brasilia
- *
- *Matheus Barbosa e Silva - 190113987\n
- *Plínio Candide Rios Mayer - 180129562\n
- *William Xavier dos Santos - 190075384\n
- *Eduardo Afonso da Silva Inácio - 221033920\n
- *Marcus Paulo Kaller Vargas - 200041096\n\n
- *
- * Software Basico - 1/2024\n
- * Professor: Marcelo Ladeira\n\n
- *
- * Arquivo que contém funções destinadas a imprimir detalhadamente no prompt a estrutura do arquivo Classfile que foi lido.
- * As informações exibidas incluem detalhes sobre a pool de constantes, versões, flags de acesso, métodos,
- * atributos, entre outros componentes críticos do Classfile.
- *
- * Para facilitar a análise e documentação, ou para simplesmente armazenar as saídas para revisão posterior,
- * é possível redirecionar a saída do prompt para um arquivo de texto. Para fazer isso, execute o programa
- * da seguinte forma:
- * ./jvm [nome do arquivo].class 1 > log.txt
- *
- * Onde '[nome do arquivo].class' deve ser substituído pelo nome real do arquivo Classfile que você deseja
- * inspecionar. A saída será então salva no arquivo 'log.txt'.
+ * @file exibidor.c
+ * @brief Fornece funcionalidades para exibir informações detalhadas sobre as estruturas de dados
+ * de um arquivo de classe Java. Isso inclui a exibição formatada do constant pool, métodos, campos
+ * e atributos da classe, o que é útil para fins de depuração e aprendizado sobre a estrutura interna
+ * de arquivos .class.
  */
 
 #include "./includes/exibidor.h"
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Imprime no prompt todas as informações gerais e específicas do arquivo ClassFile lido.
+ * @param cf Ponteiro para a estrutura ClassFile preenchida.
+ */
 void print_prompt(ClassFile* cf) {
   printf("----General Information----\n");
   printf("CAFEBABE: 0x%0x \n", cf->magic);
@@ -259,6 +243,10 @@ void print_prompt(ClassFile* cf) {
   printf("----End Second General----\n\n");
 }
 
+/**
+ * @brief Imprime os flags de acesso de uma classe, método ou campo.
+ * @param access_flags Valor dos flags de acesso.
+ */
 void print_access_flags(uint16_t access_flags) {
   if (access_flags == 0x0000) printf("\n");
   if (access_flags == 0x0001 || access_flags == 0x0021) printf("Public\n");
@@ -272,6 +260,11 @@ void print_access_flags(uint16_t access_flags) {
   if (access_flags == 0x0400) printf("Abstract\n");
 }
 
+
+/**
+ * @brief Imprime informações detalhadas sobre os métodos contidos no arquivo ClassFile.
+ * @param cf Ponteiro para a estrutura ClassFile que contém os métodos a serem impressos.
+ */
 void print_methods(ClassFile* cf) {
   uint16_t name_ind;
   uint32_t att_len;
@@ -306,6 +299,11 @@ void print_methods(ClassFile* cf) {
   }
 }
 
+/**
+ * @brief Imprime informações detalhadas do atributo de código (CodeAttribute) de um método.
+ * @param cf Ponteiro para a estrutura ClassFile que contém o pool de constantes.
+ * @param cd_atrb Ponteiro para a estrutura CodeAttribute que contém as informações do código a ser impresso.
+ */
 void print_code(ClassFile* cf, CodeAttribute* cd_atrb) {
   int opcode, pos_referencia;
   int bytes_preench, offsets;
@@ -474,6 +472,11 @@ void print_code(ClassFile* cf, CodeAttribute* cd_atrb) {
   }
 }
 
+/**
+ * @brief Imprime informações detalhadas de uma exceção (ExceptionAttribute) associada a um método.
+ * @param cf Ponteiro para a estrutura ClassFile que contém o pool de constantes.
+ * @param exc_atrb Ponteiro para a estrutura ExceptionAttribute que contém as informações da exceção a ser impressa.
+ */
 void print_exc(ClassFile* cf, ExceptionAttribute* exc_atrb) {
   printf("\n----Exception Info----\n");
   printf("attribute_name_index: cp info #%d ", exc_atrb->name_index);
@@ -485,6 +488,11 @@ void print_exc(ClassFile* cf, ExceptionAttribute* exc_atrb) {
   }
 }
 
+/**
+ * @brief Auxilia na impressão de strings e outros elementos do pool de constantes, resolvendo referências recursivamente.
+ * @param cp Ponteiro para o array do pool de constantes.
+ * @param pos_pool Índice no pool de constantes que indica o início da resolução da referência.
+ */
 void print_string_pool(ConstantPool* cp, int pos_pool) {
   int tag;
 

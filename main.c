@@ -1,3 +1,12 @@
+/**
+ * @file main.c
+ * @brief Ponto de entrada principal para o executor de classes Java. Este arquivo
+ * contém a função main que inicializa os sistemas necessários e começa a execução
+ * de um arquivo de classe Java especificado como entrada. Ele lida com a análise de
+ * argumentos da linha de comando, configuração de classpath, e invocação do método main
+ * da classe especificada.
+ */
+
 #include <stdio.h>
 #include <string.h>
 
@@ -6,20 +15,27 @@
 #include "includes/instrucao.h"
 #include "includes/area_metodos.h"
 
+/**
+ * @brief Função principal que executa a simulação de uma JVM.
+ * 
+ * @param argc Número de argumentos de linha de comando.
+ * @param args Vetor de strings contendo os argumentos.
+ * @return int Retorna 0 em caso de sucesso, ou 1 se houver um erro.
+ */
 int main(int argc, char *args[])
 {
 
-  char *cp;
-  char *caminho_classe;
+  char *cp; // Classpath para carregar as classes
+  char *caminho_classe; // Caminho da classe principal a ser executada
 
-  switch (argc)
+  switch (argc) // Processa os argumentos de linha de comando
   {
-  case 2:
+  case 2: // Argumento único esperado para o caminho da classe
     caminho_classe = args[1];
     cp = "classpath";
     break;
 
-  case 4:
+  case 4: // Argumentos adicionais para especificar o classpath
     if (!strcmp(args[2], "-cp"))
     {
       caminho_classe = args[1];
@@ -27,7 +43,7 @@ int main(int argc, char *args[])
       break;
     }
 
-  default:
+  default: // Formato de comando incorreto
     printf("Por favor, execute o programa no formato:\n./jclass-runner <caminho/arquivo.class> [-cp <classpath>]\n");
     return 1;
   }
@@ -39,6 +55,7 @@ int main(int argc, char *args[])
   inicializa_lista_classes();
   inicializa_lista_arrays();
 
+  // Carrega a classe inicial e busca o método main
   ClassFile *classe = carrega_classe_inicial(caminho_classe);
   Method *metodo = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
 
@@ -50,8 +67,10 @@ int main(int argc, char *args[])
 
   carregado = true;
 
+  // Executa todos os frames na pilha até que estejam completos
   for (uint32_t i = 0; i < pilha_frame->length; i++)
   {
     executa_frame_atual();
   }
+  // Finaliza o programa com sucesso
 }

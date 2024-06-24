@@ -1,3 +1,10 @@
+/**
+ * @file carregador.c
+ * @brief Responsável pelo carregamento, ligação e inicialização de classes Java na JVM. Este arquivo
+ * contém funções para carregar classes a partir de seus nomes, resolver referências do constant pool,
+ * e preparar a classe para execução, invocando métodos <clinit> conforme necessário para inicialização estática.
+ */
+
 #include "includes/carregador.h"
 #include <stdlib.h>
 #include <string.h>
@@ -7,11 +14,22 @@
 char *classpath;
 bool carregado = false;
 
+/**
+ * @brief Inicializa o carregador de classes configurando o caminho base para a busca de arquivos de classe.
+ * 
+ * @param cp Caminho base usado para carregar os arquivos de classe.
+ */
 void inicializa_carregador(char *cp)
 {
     classpath = cp;
 }
 
+/**
+ * @brief Carrega uma classe pelo nome, buscando primeiro na memória e, se necessário, no sistema de arquivos.
+ * 
+ * @param nome_classe O nome da classe a ser carregada.
+ * @return ClassFile* Um ponteiro para a estrutura ClassFile carregada, ou NULL se a classe não for encontrada.
+ */
 ClassFile *carrega_classe(char *nome_classe)
 {
     ClassFile *classe = busca_classe(nome_classe);
@@ -68,6 +86,12 @@ ClassFile *carrega_classe(char *nome_classe)
     return classe;
 }
 
+/**
+ * @brief Carrega a classe inicial a partir de um caminho de arquivo específico.
+ * 
+ * @param caminho_classe Caminho para o arquivo da classe inicial.
+ * @return ClassFile* Um ponteiro para a estrutura ClassFile da classe inicial.
+ */
 ClassFile *carrega_classe_inicial(char *caminho_classe)
 {
     ClassFile *classe = class_reader(caminho_classe);
@@ -83,6 +107,14 @@ ClassFile *carrega_classe_inicial(char *caminho_classe)
     return carrega_classe(nome_classe);
 }
 
+/**
+ * @brief Busca um método em uma classe pelo nome e descritor, procurando recursivamente na hierarquia de superclasses se necessário.
+ * 
+ * @param classe Classe na qual o método será buscado.
+ * @param nome Nome do método a ser buscado.
+ * @param descritor Descritor do método a ser buscado.
+ * @return Method* Um ponteiro para o método encontrado, ou NULL se o método não for encontrado.
+ */
 Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
 {
     for (int i = 0; i < classe->methods_count; i++)
@@ -106,6 +138,12 @@ Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
     return busca_metodo(super_classe, nome, descritor);
 }
 
+/**
+ * @brief Busca uma classe previamente carregada pelo nome.
+ * 
+ * @param nome_classe Nome da classe a ser buscada na lista de classes carregadas.
+ * @return ClassFile* Um ponteiro para a classe encontrada, ou NULL se a classe não for encontrada.
+ */
 ClassFile *busca_classe(char *nome_classe)
 {
     for (uint32_t i = 0; i < lista_classes.length; i++)
@@ -120,6 +158,12 @@ ClassFile *busca_classe(char *nome_classe)
     return NULL;
 }
 
+/**
+ * @brief Busca a superclasse de uma classe dada.
+ * 
+ * @param classe Classe da qual a superclasse será buscada.
+ * @return ClassFile* Um ponteiro para a superclasse encontrada, ou NULL se não houver superclasse.
+ */
 ClassFile *busca_super_classe(ClassFile *classe)
 {
     char *nome_super_classe = read_super_classe(classe);
