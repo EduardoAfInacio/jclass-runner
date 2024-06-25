@@ -3565,9 +3565,9 @@ void invokestatic()
     }
 
     int32_t numero_parametros = get_numero_parametros(metodo_ref->classe, metodo_ref->metodo);
-    int32_t *fields = calloc(sizeof(int32_t), numero_parametros + 1);
+    int32_t *fields = calloc(sizeof(int32_t), numero_parametros);
 
-    for (int32_t i = 0; i <= numero_parametros; i++)
+    for (int32_t i = 0; i < numero_parametros; i++)
     {
         fields[i] = pop_operando();
     }
@@ -3575,9 +3575,9 @@ void invokestatic()
     push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
     frame_atual = get_frame_atual();
 
-    for (int32_t i = 0; i <= numero_parametros; i++)
+    for (int32_t i = 0; i < numero_parametros; i++)
     {
-        frame_atual->fields[i] = fields[numero_parametros - i];
+        frame_atual->fields[i] = fields[i];
     }
 
     free(fields);

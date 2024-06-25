@@ -60,6 +60,12 @@ void executa_frame_atual()
         // printf("PC: %d\n", frame_atual->pc);
         // printf("Instrucao: %s\n", instrucoes[frame_atual->code[frame_atual->pc]].nome);
         // printf("Pilha de operandos: %d\n", frame_atual->operandos_length);
+        // printf("Operandos: [");
+        // for (int i = 0; i < frame_atual->operandos_length; i++)
+        // {
+        //     printf("%d%s", frame_atual->operandos[i], i == frame_atual->operandos_length - 1 ? "" : ", ");
+        // }
+        // printf("]\n");
         // printf("--------------------------\n\n");
 
         instrucoes[frame_atual->code[frame_atual->pc]].exec();
