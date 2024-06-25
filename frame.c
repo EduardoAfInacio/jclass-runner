@@ -59,6 +59,7 @@ void executa_frame_atual()
         // printf("--------------------------\n");
         // printf("PC: %d\n", frame_atual->pc);
         // printf("Instrucao: %s\n", instrucoes[frame_atual->code[frame_atual->pc]].nome);
+        // printf("Pilha de operandos: %d\n", frame_atual->operandos_length);
         // printf("--------------------------\n\n");
 
         instrucoes[frame_atual->code[frame_atual->pc]].exec();

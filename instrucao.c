@@ -658,19 +658,19 @@ void inicializa_instrucoes()
 
     instrucoes[161].nome = "if_icmplt";
     instrucoes[161].exec = &if_icmplt;
-    instrucoes[161].bytes = 0;
+    instrucoes[161].bytes = 2;
 
     instrucoes[162].nome = "if_icmpge";
     instrucoes[162].exec = &if_icmpge;
-    instrucoes[162].bytes = 0;
+    instrucoes[162].bytes = 2;
 
     instrucoes[163].nome = "if_icmpgt";
     instrucoes[163].exec = &if_icmpgt;
-    instrucoes[163].bytes = 0;
+    instrucoes[163].bytes = 2;
 
     instrucoes[164].nome = "if_icmple";
     instrucoes[164].exec = &if_icmple;
-    instrucoes[164].bytes = 0;
+    instrucoes[164].bytes = 2;
 
     instrucoes[165].nome = "if_acmpeq";
     instrucoes[165].exec = &if_acmpeq;
