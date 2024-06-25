@@ -23,30 +23,6 @@ int64_t double_to_int(double valor)
     return retorno;
 }
 
-int32_t get_utf(ConstantPool *constant_pool, int32_t indice)
-{
-    uint8_t tag = constant_pool[indice - 1].tag;
-
-    if (tag == CONSTANT_Utf8)
-    {
-        return indice;
-    }
-
-    switch (tag)
-    {
-    case CONSTANT_Class:
-        return get_utf(constant_pool, constant_pool[indice - 1].info.Class.name_index);
-    case CONSTANT_String:
-    case CONSTANT_Integer:
-    case CONSTANT_Float:
-        return get_utf(constant_pool, constant_pool[indice - 1].info.String.string_index);
-    
-    default:
-        printf("ERRO: get_utf nao implementada para tag %d\n", tag);
-        exit(1);
-    }
-}
-
 uint16_t concat16(uint8_t byte1, uint8_t byte2)
 {
     uint16_t aux = byte1;
@@ -62,7 +38,7 @@ uint64_t concat64(uint32_t int1, uint32_t int2)
 char *read_string_cp(ConstantPool *constant_pool, uint16_t indice)
 {
     uint16_t length = constant_pool[indice - 1].info.Utf8.length;
-    char *retorno = malloc(length + 1);
+    char *retorno = calloc(length + 1, sizeof(char));
 
     for (uint16_t i = 0; i < length; i++)
     {

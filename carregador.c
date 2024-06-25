@@ -101,8 +101,13 @@ MethodRef *busca_metodo(ClassFile *classe, char *nome, char *descritor)
             MethodRef *metodo_ref = calloc(1, sizeof(MethodRef));
             metodo_ref->metodo = classe->methods + i;
             metodo_ref->classe = classe;
+            free(nome_temp);
+            free(descritor_temp);
             return metodo_ref;
         }
+
+        free(nome_temp);
+        free(descritor_temp);
     }
 
     ClassFile *super_classe = busca_super_classe(classe);

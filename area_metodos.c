@@ -40,12 +40,14 @@ Objeto *cria_objeto(ClassFile *classe)
     objeto->classe = classe;
 
     objeto->campos = calloc(sizeof(Campo), classe->fields_count);
+    objeto->campos_length = 0;
 
     for (int i = 0; i < classe->fields_count; i++)
     {
         objeto->campos[i].nome = read_string_cp(classe->constant_pool, classe->fields[i].name_index);
         objeto->campos[i].valor1 = 0;
         objeto->campos[i].valor2 = 0;
+        objeto->campos_length++;
     }
 
     return objeto;

@@ -961,8 +961,7 @@ void ldc()
         break;
 
     case CONSTANT_String:
-        int32_t indice_utf = get_utf(frame_atual->constant_pool, indice);
-        push_operando(indice_utf);
+        push_operando((intptr_t) read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.String.string_index));
         break;
 
     default:
@@ -991,8 +990,7 @@ void ldc_w()
         break;
 
     case CONSTANT_String:
-        int32_t indice_utf = get_utf(get_frame_atual()->constant_pool, indice);
-        push_operando(indice_utf);
+        push_operando((intptr_t) read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.String.string_index));
         break;
 
     default:
@@ -1619,8 +1617,8 @@ void lastore()
     int32_t indice = pop_operando();
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
-    referencia[indice] = menos_significativos;
-    referencia[indice + 1] = mais_significativos;
+    referencia[indice] = mais_significativos;
+    referencia[indice + 1] = menos_significativos;
 
     atualiza_pc();
 }
@@ -1643,8 +1641,8 @@ void dastore()
     int32_t indice = pop_operando();
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
-    referencia[indice] = menos_significativos;
-    referencia[indice + 1] = mais_significativos;
+    referencia[indice] = mais_significativos;
+    referencia[indice + 1] = menos_significativos;
 
     atualiza_pc();
 }
@@ -3300,6 +3298,9 @@ void getstatic()
 
     if (!strcmp(nome_classe, "java/lang/System") && !strcmp(nome_field, "out") && !strcmp(descritor_field, "Ljava/io/PrintStream;"))
     {
+        free(nome_classe);
+        free(nome_field);
+        free(descritor_field);
         push_operando(0);
         atualiza_pc();
         return;
@@ -3324,7 +3325,6 @@ void getfield()
     uint16_t indice_classe = frame_atual->constant_pool[indice - 1].info.Fieldref.class_index;
     uint16_t nome_tipo_indice = get_frame_atual()->constant_pool[indice - 1].info.Fieldref.name_and_type_index;
 
-    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
     char *nome = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.name_index);
     char *tipo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.descriptor_index);
 
@@ -3342,6 +3342,8 @@ void getfield()
         push_operando(campo->valor1);
     }
 
+    free(nome);
+    free(tipo);
     atualiza_pc();
 }
 
@@ -3354,7 +3356,6 @@ void putfield()
     uint16_t indice_classe = frame_atual->constant_pool[indice - 1].info.Fieldref.class_index;
     uint16_t nome_tipo_indice = frame_atual->constant_pool[indice - 1].info.Fieldref.name_and_type_index;
 
-    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
     char *nome = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.name_index);
     char *tipo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[nome_tipo_indice - 1].info.NameAndType.descriptor_index);
 
@@ -3378,6 +3379,8 @@ void putfield()
         campo->valor2 = 0;
     }
 
+    free(nome);
+    free(tipo);
     atualiza_pc();
 }
 
@@ -3435,8 +3438,7 @@ void invokevirtual()
         }
         else if (!strcmp(descritor_metodo, "(Ljava/lang/String;)V"))
         {
-            uint32_t indice = pop_operando();
-            char* valor = read_string_cp(frame_atual->constant_pool, indice);
+            char *valor = (char*)(intptr_t)pop_operando();
             printf("%s\n", valor);
         }
         else
@@ -3445,11 +3447,15 @@ void invokevirtual()
             exit(1);
         }
 
+        free(nome_classe);
+        free(nome_metodo);
+        free(descritor_metodo);  
         pop_operando();
         atualiza_pc();
         return;
     }
 
+    
     ClassFile *classe = carrega_classe(nome_classe);
     MethodRef *metodo_ref = busca_metodo(classe, nome_metodo, descritor_metodo);
 
@@ -3480,6 +3486,9 @@ void invokevirtual()
     executa_frame_atual();
 
     free(metodo_ref);
+    free(nome_classe);
+    free(nome_metodo);
+    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3526,6 +3535,9 @@ void invokespecial()
     executa_frame_atual();
 
     free(metodo_ref);
+    free(nome_classe);
+    free(nome_metodo);
+    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3578,6 +3590,9 @@ void invokestatic()
     executa_frame_atual();
 
     free(metodo_ref);
+    free(nome_classe);
+    free(nome_metodo);
+    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3623,6 +3638,9 @@ void invokeinterface()
     executa_frame_atual();
 
     free(metodo_ref);
+    free(nome_classe);
+    free(nome_metodo);
+    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3643,6 +3661,7 @@ void jvm_new()
     }
 
     push_operando((intptr_t)objeto);
+    free(nome_classe);
     atualiza_pc();
 }
 
@@ -3777,6 +3796,8 @@ void instanceof ()
         push_operando(0);
     }
 
+    free(nome_classe_objeto);
+    free(nome_classe_cp);
     atualiza_pc();
 }
 
