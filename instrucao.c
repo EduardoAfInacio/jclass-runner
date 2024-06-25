@@ -3212,7 +3212,6 @@ void ireturn()
     if (pilha_frame->length > 1)
     {
         push_retorno(pop_operando());
-        return;
     }
 
     frame_atual->pc = frame_atual->code_length;
@@ -3229,7 +3228,6 @@ void lreturn()
 
         push_retorno(mais_significativo);
         push_retorno(menos_significativo);
-        return;
     }
 
     frame_atual->pc = frame_atual->code_length;
@@ -3242,7 +3240,6 @@ void freturn()
     if (pilha_frame->length > 1)
     {
         push_retorno(pop_operando());
-        return;
     }
 
     frame_atual->pc = frame_atual->code_length;
@@ -3259,7 +3256,6 @@ void dreturn()
 
         push_retorno(mais_significativo);
         push_retorno(menos_significativo);
-        return;
     }
 
     frame_atual->pc = frame_atual->code_length;
@@ -3272,7 +3268,6 @@ void areturn()
     if (pilha_frame->length > 1)
     {
         push_retorno(pop_operando());
-        return;
     }
 
     frame_atual->pc = frame_atual->code_length;
@@ -3734,7 +3729,7 @@ void arraylength()
         }
     }
 
-    printf("ERRO: array nao encontrado");
+    printf("ERRO: array nao encontrado\n");
     exit(1);
 }
 
