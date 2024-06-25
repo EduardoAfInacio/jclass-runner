@@ -926,7 +926,7 @@ void dconst_1()
 void bipush()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t argumento = frame_atual->code[frame_atual->pc + 1];
+    int8_t argumento = frame_atual->code[frame_atual->pc + 1];
 
     push_operando(argumento);
 
@@ -936,19 +936,18 @@ void bipush()
 void sipush()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t byte1, byte2;
+    int8_t byte1 = frame_atual->code[(frame_atual->pc + 1)];
+    int8_t byte2 = frame_atual->code[(frame_atual->pc + 2)];
+    int16_t si = concat16(byte1, byte2);
 
-    byte1 = frame_atual->code[(frame_atual->pc + 1)];
-    byte2 = frame_atual->code[(frame_atual->pc + 2)];
-
-    push_operando((byte1 << 8) + byte2);
+    push_operando(si);
     atualiza_pc();
 }
 
 void ldc()
 {
     Frame *frame_atual = get_frame_atual();
-    uint32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     uint8_t tag = frame_atual->constant_pool[indice - 1].tag;
 
     switch (tag)
@@ -977,7 +976,7 @@ void ldc()
 void ldc_w()
 {
     Frame *frame_atual = get_frame_atual();
-    uint32_t indice = concat16(frame_atual->code[frame_atual->pc + 1], frame_atual->code[frame_atual->pc + 2]);
+    uint16_t indice = concat16(frame_atual->code[frame_atual->pc + 1], frame_atual->code[frame_atual->pc + 2]);
     uint8_t tag = (frame_atual->constant_pool[indice - 1]).tag;
 
     switch (tag)
@@ -1007,7 +1006,7 @@ void ldc2_w()
 {
     Frame *frame_atual = get_frame_atual();
 
-    uint32_t indice = concat16(frame_atual->code[frame_atual->pc + 1], frame_atual->code[frame_atual->pc + 2]);
+    uint16_t indice = concat16(frame_atual->code[frame_atual->pc + 1], frame_atual->code[frame_atual->pc + 2]);
     uint8_t tag = (frame_atual->constant_pool[indice - 1]).tag;
     uint32_t mais_significativos;
     uint32_t menos_significativos;
@@ -1039,9 +1038,8 @@ void ldc2_w()
 
 void iload()
 {
-    ;
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
 
     push_operando(frame_atual->fields[indice]);
     atualiza_pc();
@@ -1051,7 +1049,7 @@ void lload()
 {
     Frame *frame_atual = get_frame_atual();
 
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = frame_atual->fields[indice];
     int32_t mais_significativos = frame_atual->fields[indice + 1];
 
@@ -1086,7 +1084,7 @@ void dload()
 void aload()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
 
     push_operando(frame_atual->fields[indice]);
     atualiza_pc();
@@ -1257,13 +1255,13 @@ void aload_1()
 
 void aload_2()
 {
-    push_operando(get_frame_atual()->fields[1]);
+    push_operando(get_frame_atual()->fields[2]);
     atualiza_pc();
 }
 
 void aload_3()
 {
-    push_operando(get_frame_atual()->fields[1]);
+    push_operando(get_frame_atual()->fields[3]);
     atualiza_pc();
 }
 
@@ -1346,7 +1344,7 @@ void saload()
 void istore()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
 
     frame_atual->fields[indice] = pop_operando();
     atualiza_pc();
@@ -1355,7 +1353,7 @@ void istore()
 void lstore()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1369,7 +1367,7 @@ void fstore()
 {
 
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
 
     frame_atual->fields[indice] = pop_operando();
     atualiza_pc();
@@ -1378,7 +1376,7 @@ void fstore()
 void dstore()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1392,7 +1390,7 @@ void astore()
 {
 
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
 
     frame_atual->fields[indice] = pop_operando();
     atualiza_pc();
@@ -1434,7 +1432,7 @@ void istore_3()
 void lstore_0()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1447,7 +1445,7 @@ void lstore_0()
 void lstore_1()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1460,7 +1458,7 @@ void lstore_1()
 void lstore_2()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1473,7 +1471,7 @@ void lstore_2()
 void lstore_3()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1518,7 +1516,7 @@ void fstore_3()
 void dstore_0()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1531,7 +1529,7 @@ void dstore_0()
 void dstore_1()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1544,7 +1542,7 @@ void dstore_1()
 void dstore_2()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -1557,7 +1555,7 @@ void dstore_2()
 void dstore_3()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
@@ -2402,7 +2400,7 @@ void lxor()
 void iinc()
 {
     Frame *frame_atual = get_frame_atual();
-    int8_t indice = frame_atual->code[frame_atual->pc + 1];
+    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
     int8_t constante = frame_atual->code[frame_atual->pc + 2];
 
     frame_atual->fields[indice] += constante;
@@ -3393,7 +3391,11 @@ void invokevirtual()
 
     if (!strcmp(nome_classe, "java/io/PrintStream") && (!strcmp(nome_metodo, "println") || !strcmp(nome_metodo, "print")))
     {
-        if (!strcmp(descritor_metodo, "(Z)V"))
+        if (!strcmp(descritor_metodo, "()V"))
+        {
+            printf("\n");
+        }
+        else if (!strcmp(descritor_metodo, "(Z)V"))
         {
             bool valor = pop_operando();
             printf("%s%s", valor ? "true" : "false", !strcmp(nome_metodo, "println") ? "\n" : "");
@@ -3491,7 +3493,7 @@ void invokevirtual()
             pop_operando();
             char *temp = calloc(strlen(string_buffer), sizeof(char));
             strcpy(temp, string_buffer);
-            push_operando((intptr_t) temp);
+            push_operando((intptr_t)temp);
             free(nome_classe);
             free(nome_metodo);
             free(descritor_metodo);
@@ -3546,7 +3548,7 @@ void invokespecial()
     uint16_t indice_classe = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.class_index;
     uint16_t indice_nome_tipo = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.name_and_type_index;
     char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
-    
+
     if (!strcmp(nome_classe, "java/lang/StringBuffer"))
     {
         pop_operando();
@@ -3554,7 +3556,7 @@ void invokespecial()
         atualiza_pc();
         return;
     }
-    
+
     char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
     char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
 
@@ -3712,9 +3714,9 @@ void jvm_new()
     Frame *frame_atual = get_frame_atual();
     uint16_t byte1 = frame_atual->code[frame_atual->pc + 1];
     uint16_t byte2 = frame_atual->code[frame_atual->pc + 2];
-    uint32_t indice = concat16(byte1, byte2);
+    uint16_t indice = concat16(byte1, byte2);
     char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.Class.name_index);
-    
+
     if (!strcmp(nome_classe, "java/lang/StringBuffer"))
     {
         push_operando(0);
@@ -3722,7 +3724,7 @@ void jvm_new()
         atualiza_pc();
         return;
     }
-    
+
     ClassFile *classe = carrega_classe(nome_classe);
     Objeto *objeto = cria_objeto(classe);
 
@@ -3888,34 +3890,8 @@ void wide()
 
 void multianewarray()
 {
-    Frame *frame_atual = get_frame_atual();
-    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
-    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
-    uint8_t dimensoes = frame_atual->code[frame_atual->pc + 3];
-    uint16_t indice_classe = concat16(byte1, byte2);
-    uint16_t indice_nome_classe = frame_atual->constant_pool[indice_classe - 1].info.Class.name_index;
-    char *nome_classe = read_string_cp(frame_atual->constant_pool, indice_nome_classe);
-
-    char *type_value = NULL;
-    int i = 0;
-    while (nome_classe[i] == '[')
-        i++;
-    char *nome_classe_limpo = calloc(strlen(nome_classe) - (i + 2), sizeof(char));
-
-    for (int j = i; j < strlen(nome_classe); j++)
-    {
-        nome_classe_limpo[j - i] = nome_classe[j - i];
-    }
-
-    if (nome_classe[i] == 'L')
-    {
-        if (strcmp(nome_classe_limpo, "java/lang/String"))
-        {
-            carrega_classe(nome_classe_limpo);
-        }
-
-        type_value = nome_classe_limpo;
-    }
+    printf("ERRO: multianewarray nao implementado\n");
+    exit(1);
 }
 
 void ifnull()
