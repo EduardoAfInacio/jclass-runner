@@ -1052,8 +1052,8 @@ void lload()
     Frame *frame_atual = get_frame_atual();
 
     int32_t indice = frame_atual->code[frame_atual->pc + 1];
-    int32_t mais_significativos = frame_atual->fields[indice];
-    int32_t menos_significativos = frame_atual->fields[indice + 1];
+    int32_t menos_significativos = frame_atual->fields[indice];
+    int32_t mais_significativos = frame_atual->fields[indice + 1];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1074,8 +1074,8 @@ void dload()
 {
     Frame *frame_atual = get_frame_atual();
     int32_t indice = frame_atual->code[frame_atual->pc + 1];
-    int32_t mais_significativos = frame_atual->fields[indice];
-    int32_t menos_significativos = frame_atual->fields[indice + 1];
+    int32_t menos_significativos = frame_atual->fields[indice];
+    int32_t mais_significativos = frame_atual->fields[indice + 1];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1121,8 +1121,8 @@ void iload_3()
 void lload_0()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[0];
-    int32_t menos_significativos = frame_atual->fields[1];
+    int32_t menos_significativos = frame_atual->fields[0];
+    int32_t mais_significativos = frame_atual->fields[1];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1133,8 +1133,8 @@ void lload_0()
 void lload_1()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[1];
-    int32_t menos_significativos = frame_atual->fields[2];
+    int32_t menos_significativos = frame_atual->fields[1];
+    int32_t mais_significativos = frame_atual->fields[2];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1145,8 +1145,8 @@ void lload_1()
 void lload_2()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[2];
-    int32_t menos_significativos = frame_atual->fields[3];
+    int32_t menos_significativos = frame_atual->fields[2];
+    int32_t mais_significativos = frame_atual->fields[3];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1157,8 +1157,8 @@ void lload_2()
 void lload_3()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[3];
-    int32_t menos_significativos = frame_atual->fields[4];
+    int32_t menos_significativos = frame_atual->fields[3];
+    int32_t mais_significativos = frame_atual->fields[4];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1168,7 +1168,6 @@ void lload_3()
 
 void fload_0()
 {
-
     push_operando(get_frame_atual()->fields[0]);
     atualiza_pc();
 }
@@ -1198,8 +1197,8 @@ void dload_0()
 {
 
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[0];
-    int32_t menos_significativos = frame_atual->fields[1];
+    int32_t menos_significativos = frame_atual->fields[0];
+    int32_t mais_significativos = frame_atual->fields[1];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1210,8 +1209,8 @@ void dload_0()
 void dload_1()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[1];
-    int32_t menos_significativos = frame_atual->fields[2];
+    int32_t menos_significativos = frame_atual->fields[1];
+    int32_t mais_significativos = frame_atual->fields[2];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1222,8 +1221,8 @@ void dload_1()
 void dload_2()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[2];
-    int32_t menos_significativos = frame_atual->fields[3];
+    int32_t menos_significativos = frame_atual->fields[2];
+    int32_t mais_significativos = frame_atual->fields[3];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1234,8 +1233,8 @@ void dload_2()
 void dload_3()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t mais_significativos = frame_atual->fields[3];
-    int32_t menos_significativos = frame_atual->fields[4];
+    int32_t menos_significativos = frame_atual->fields[3];
+    int32_t mais_significativos = frame_atual->fields[4];
 
     push_operando(mais_significativos);
     push_operando(menos_significativos);
@@ -1282,8 +1281,8 @@ void laload()
     int32_t indice = pop_operando();
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
-    push_operando(referencia[indice]);
     push_operando(referencia[indice + 1]);
+    push_operando(referencia[indice]);
     atualiza_pc();
 }
 
@@ -1301,8 +1300,8 @@ void daload()
     int32_t indice = pop_operando();
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
-    push_operando(referencia[indice]);
     push_operando(referencia[indice + 1]);
+    push_operando(referencia[indice]);
     atualiza_pc();
 }
 
@@ -1360,8 +1359,8 @@ void lstore()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[indice] = mais_significativos;
     frame_atual->fields[indice] = menos_significativos;
+    frame_atual->fields[indice + 1] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1383,8 +1382,8 @@ void dstore()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[indice] = mais_significativos;
     frame_atual->fields[indice] = menos_significativos;
+    frame_atual->fields[indice + 1] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1439,8 +1438,8 @@ void lstore_0()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[0] = mais_significativos;
-    frame_atual->fields[1] = menos_significativos;
+    frame_atual->fields[0] = menos_significativos;
+    frame_atual->fields[1] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1452,8 +1451,8 @@ void lstore_1()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[1] = mais_significativos;
-    frame_atual->fields[2] = menos_significativos;
+    frame_atual->fields[1] = menos_significativos;
+    frame_atual->fields[2] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1465,8 +1464,8 @@ void lstore_2()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[2] = mais_significativos;
-    frame_atual->fields[3] = menos_significativos;
+    frame_atual->fields[2] = menos_significativos;
+    frame_atual->fields[3] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1478,8 +1477,8 @@ void lstore_3()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[3] = mais_significativos;
-    frame_atual->fields[4] = menos_significativos;
+    frame_atual->fields[3] = menos_significativos;
+    frame_atual->fields[4] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1523,8 +1522,8 @@ void dstore_0()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[0] = mais_significativos;
-    frame_atual->fields[1] = menos_significativos;
+    frame_atual->fields[0] = menos_significativos;
+    frame_atual->fields[1] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1536,8 +1535,8 @@ void dstore_1()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[1] = mais_significativos;
-    frame_atual->fields[2] = menos_significativos;
+    frame_atual->fields[1] = menos_significativos;
+    frame_atual->fields[2] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1549,8 +1548,8 @@ void dstore_2()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[2] = mais_significativos;
-    frame_atual->fields[3] = menos_significativos;
+    frame_atual->fields[2] = menos_significativos;
+    frame_atual->fields[3] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1562,8 +1561,8 @@ void dstore_3()
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[3] = mais_significativos;
-    frame_atual->fields[4] = menos_significativos;
+    frame_atual->fields[3] = menos_significativos;
+    frame_atual->fields[4] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1618,8 +1617,8 @@ void lastore()
     int32_t indice = pop_operando();
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
-    referencia[indice] = mais_significativos;
-    referencia[indice + 1] = menos_significativos;
+    referencia[indice] = menos_significativos;
+    referencia[indice + 1] = mais_significativos;
 
     atualiza_pc();
 }
@@ -1642,8 +1641,8 @@ void dastore()
     int32_t indice = pop_operando();
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
-    referencia[indice] = mais_significativos;
-    referencia[indice + 1] = menos_significativos;
+    referencia[indice] = menos_significativos;
+    referencia[indice + 1] = mais_significativos;
 
     atualiza_pc();
 }
