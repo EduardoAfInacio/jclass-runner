@@ -66,6 +66,7 @@ void executa_frame_atual()
         //     printf("%d%s", frame_atual->operandos[i], i == frame_atual->operandos_length - 1 ? "" : ", ");
         // }
         // printf("]\n");
+        // printf("Pilha de frames: %d\n", pilha_frame->length);
         // printf("--------------------------\n\n");
 
         instrucoes[frame_atual->code[frame_atual->pc]].exec();
