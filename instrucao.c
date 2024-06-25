@@ -3138,7 +3138,7 @@ void tableswitch()
 void lookupswitch()
 {
     Frame *frame_atual = get_frame_atual();
-    uint32_t pc_aux = frame_atual->pc + ((4 - ((pc_aux + 1) % 4)) % 4) + 1;
+    uint32_t pc_aux = frame_atual->pc + ((4 - ((frame_atual->pc + 1) % 4)) % 4) + 1;
     int32_t chave = pop_operando();
     int32_t default_v = 0;
     int32_t pares = 0;
