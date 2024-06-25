@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdbool.h>
 
+char *string_buffer;
 Instrucao instrucoes[NUM_INSTRUCOES];
 
 void inicializa_instrucoes()
@@ -961,7 +962,7 @@ void ldc()
         break;
 
     case CONSTANT_String:
-        push_operando((intptr_t) read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.String.string_index));
+        push_operando((intptr_t)read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.String.string_index));
         break;
 
     default:
@@ -990,7 +991,7 @@ void ldc_w()
         break;
 
     case CONSTANT_String:
-        push_operando((intptr_t) read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.String.string_index));
+        push_operando((intptr_t)read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.String.string_index));
         break;
 
     default:
@@ -3395,10 +3396,10 @@ void invokevirtual()
     {
         if (!strcmp(descritor_metodo, "(Z)V"))
         {
-            bool valor = pop_operando(); 
+            bool valor = pop_operando();
             printf("%s%s", valor ? "true" : "false", !strcmp(nome_metodo, "println") ? "\n" : "");
         }
-        else if(!strcmp(descritor_metodo, "(C)V"))
+        else if (!strcmp(descritor_metodo, "(C)V"))
         {
             uint32_t valor = pop_operando();
             printf("%c%s", valor, !strcmp(nome_metodo, "println") ? "\n" : "");
@@ -3433,7 +3434,7 @@ void invokevirtual()
         }
         else if (!strcmp(descritor_metodo, "(Ljava/lang/String;)V"))
         {
-            char *valor = (char*)(intptr_t)pop_operando();
+            char *valor = (char *)(intptr_t)pop_operando();
             printf("%s%s", valor, !strcmp(nome_metodo, "println") ? "\n" : "");
         }
         else
@@ -3444,13 +3445,63 @@ void invokevirtual()
 
         free(nome_classe);
         free(nome_metodo);
-        free(descritor_metodo);  
+        free(descritor_metodo);
         pop_operando();
         atualiza_pc();
         return;
     }
 
-    
+    if (!strcmp(nome_classe, "java/lang/StringBuffer"))
+    {
+        if (!strcmp(nome_metodo, "append"))
+        {
+            if (!strcmp(descritor_metodo, "(Ljava/lang/String;)Ljava/lang/StringBuffer;"))
+            {
+                char *string = (char *)(intptr_t)pop_operando();
+                if (!string_buffer)
+                {
+                    string_buffer = calloc(strlen(string), sizeof(char));
+                    strcpy(string_buffer, string);
+                }
+                else
+                {
+                    char *temp = calloc(strlen(string_buffer), sizeof(char));
+                    strcpy(temp, string_buffer);
+                    string_buffer = realloc(string_buffer, (strlen(temp) + strlen(string)) * sizeof(char));
+                    strcpy(string_buffer, string);
+                    strcat(string_buffer, temp);
+                    free(temp);
+                }
+
+                free(nome_classe);
+                free(nome_metodo);
+                free(descritor_metodo);
+                free(string);
+                atualiza_pc();
+                return;
+            }
+            else
+            {
+                printf("ERRO: StringBuffer.append nao implementada para descritor %s\n", descritor_metodo);
+                exit(1);
+            }
+        }
+
+        if (!strcmp(nome_metodo, "toString"))
+        {
+            pop_operando();
+            char *temp = calloc(strlen(string_buffer), sizeof(char));
+            strcpy(temp, string_buffer);
+            push_operando((intptr_t) temp);
+            free(nome_classe);
+            free(nome_metodo);
+            free(descritor_metodo);
+            free(string_buffer);
+            atualiza_pc();
+            return;
+        }
+    }
+
     ClassFile *classe = carrega_classe(nome_classe);
     MethodRef *metodo_ref = busca_metodo(classe, nome_metodo, descritor_metodo);
 
@@ -3496,6 +3547,15 @@ void invokespecial()
     uint16_t indice_classe = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.class_index;
     uint16_t indice_nome_tipo = frame_atual->constant_pool[indice_metodo - 1].info.Methodref.name_and_type_index;
     char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
+    
+    if (!strcmp(nome_classe, "java/lang/StringBuffer"))
+    {
+        pop_operando();
+        free(nome_classe);
+        atualiza_pc();
+        return;
+    }
+    
     char *nome_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
     char *descritor_metodo = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
 
@@ -3617,7 +3677,7 @@ void invokeinterface()
         fields[i] = pop_operando();
     }
 
-    Objeto *objeto = (Objeto*)(intptr_t) fields[numero_parametros];
+    Objeto *objeto = (Objeto *)(intptr_t)fields[numero_parametros];
     ClassFile *classe_objeto = objeto->classe;
 
     MethodRef *metodo_ref = busca_metodo(classe_objeto, nome_metodo, descritor_metodo);
@@ -3628,7 +3688,6 @@ void invokeinterface()
         exit(1);
     }
 
-    
     push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
     frame_atual = get_frame_atual();
 
@@ -3636,7 +3695,7 @@ void invokeinterface()
     {
         frame_atual->fields[i] = fields[numero_parametros - i];
     }
-    
+
     executa_frame_atual();
 
     free(fields);
@@ -3656,6 +3715,15 @@ void jvm_new()
     uint16_t byte2 = frame_atual->code[frame_atual->pc + 2];
     uint32_t indice = concat16(byte1, byte2);
     char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice - 1].info.Class.name_index);
+    
+    if (!strcmp(nome_classe, "java/lang/StringBuffer"))
+    {
+        push_operando(0);
+        free(nome_classe);
+        atualiza_pc();
+        return;
+    }
+    
     ClassFile *classe = carrega_classe(nome_classe);
     Objeto *objeto = cria_objeto(classe);
 
@@ -3829,12 +3897,12 @@ void multianewarray()
     uint16_t indice_nome_classe = frame_atual->constant_pool[indice_classe - 1].info.Class.name_index;
     char *nome_classe = read_string_cp(frame_atual->constant_pool, indice_nome_classe);
 
-    char* type_value = NULL;
+    char *type_value = NULL;
     int i = 0;
     while (nome_classe[i] == '[')
         i++;
     char *nome_classe_limpo = calloc(strlen(nome_classe) - (i + 2), sizeof(char));
-    
+
     for (int j = i; j < strlen(nome_classe); j++)
     {
         nome_classe_limpo[j - i] = nome_classe[j - i];
@@ -3846,7 +3914,7 @@ void multianewarray()
         {
             carrega_classe(nome_classe_limpo);
         }
-        
+
         type_value = nome_classe_limpo;
     }
 }
