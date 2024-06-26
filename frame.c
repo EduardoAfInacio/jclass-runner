@@ -55,8 +55,6 @@ void push_frame(ConstantPool *constant_pool, Method *metodo)
 void pop_frame()
 {
     Frame *frame_atual = get_frame_atual();
-    free(frame_atual->fields);
-    free(frame_atual->operandos);
     pilha_frame->frames = realloc(pilha_frame->frames, pilha_frame->length * sizeof(Frame));
     pilha_frame->length--;
 }
