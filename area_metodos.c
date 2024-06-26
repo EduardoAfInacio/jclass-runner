@@ -78,18 +78,6 @@ Campo *campo_estatico_por_nome(ClassFile *classe, char *nome)
 
     return NULL;
 }
-Campo *campo_estatico_por_nome(ClassFile *classe, char *nome)
-{
-    for (uint32_t i = 0; i < classe->campos_length; i++)
-    {
-        if (!strcmp(nome, classe->campos[i].nome))
-        {
-            return &(classe->campos[i]);
-        }
-    }
-
-    return NULL;
-}
 
 /**
  * @brief Cria uma nova instância de objeto de uma classe especificada.

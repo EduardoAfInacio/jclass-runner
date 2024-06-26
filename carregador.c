@@ -104,27 +104,6 @@ ClassFile *carrega_classe(char *nome_classe)
 }
 
 /**
- * @brief Carrega a classe inicial a partir de um caminho de arquivo específico.
- * 
- * @param caminho_classe Caminho para o arquivo da classe inicial.
- * @return ClassFile* Um ponteiro para a estrutura ClassFile da classe inicial.
- */
-ClassFile *carrega_classe_inicial(char *caminho_classe)
-{
-    ClassFile *classe = class_reader(caminho_classe);
-
-    if (!classe)
-    {
-        printf("ERRO: classe %s nao encontrada\n", caminho_classe);
-        exit(1);
-    }
-
-    char *nome_classe = read_nome_classe(classe);
-
-    return carrega_classe(nome_classe);
-}
-
-/**
  * @brief Busca um método em uma classe pelo nome e descritor, procurando recursivamente na hierarquia de superclasses se necessário.
  * 
  * @param classe Classe na qual o método será buscado.
