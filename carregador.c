@@ -64,18 +64,35 @@ ClassFile *carrega_classe(char *nome_classe)
     if (classe->super_class)
     {
         char *super_classe = read_super_classe(classe);
-        carrega_classe(super_classe);
+        if (strcmp(super_classe, "java/lang/Object"))
+        {
+            carrega_classe(super_classe);
+        }
     }
 
-    Method *clinit = busca_metodo(classe, "<clinit>", "()V");
+    MethodRef *clinit_ref = busca_metodo(classe, "<clinit>", "()V");
 
-    if (clinit)
+    if (clinit_ref && clinit_ref->classe == classe)
     {
-        push_frame(classe->constant_pool, clinit);
+        push_frame(classe->constant_pool, clinit_ref->metodo);
+
         if (carregado)
         {
             executa_frame_atual();
         }
+
+        free(clinit_ref);
+    }
+
+    classe->campos = calloc(classe->fields_count, sizeof(Campo));
+    classe->campos_length = 0;
+
+    for (uint16_t i = 0; i < classe->fields_count; i++)
+    {
+        classe->campos[i].nome = read_string_cp(classe->constant_pool, classe->fields[i].name_index);
+        classe->campos[i].valor1 = 0;
+        classe->campos[i].valor2 = 0;
+        classe->campos_length++;
     }
 
     lista_classes.classes = realloc(lista_classes.classes, sizeof(ClassFile *) * lista_classes.length + 1);
@@ -113,9 +130,9 @@ ClassFile *carrega_classe_inicial(char *caminho_classe)
  * @param classe Classe na qual o método será buscado.
  * @param nome Nome do método a ser buscado.
  * @param descritor Descritor do método a ser buscado.
- * @return Method* Um ponteiro para o método encontrado, ou NULL se o método não for encontrado.
+ * @return MethodRef* Um ponteiro para o método encontrado, ou NULL se o método não for encontrado.
  */
-Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
+MethodRef *busca_metodo(ClassFile *classe, char *nome, char *descritor)
 {
     for (int i = 0; i < classe->methods_count; i++)
     {
@@ -124,8 +141,16 @@ Method *busca_metodo(ClassFile *classe, char *nome, char *descritor)
 
         if (!strcmp(nome, nome_temp) && !strcmp(descritor, descritor_temp))
         {
-            return (classe->methods + i);
+            MethodRef *metodo_ref = calloc(1, sizeof(MethodRef));
+            metodo_ref->metodo = classe->methods + i;
+            metodo_ref->classe = classe;
+            free(nome_temp);
+            free(descritor_temp);
+            return metodo_ref;
         }
+
+        free(nome_temp);
+        free(descritor_temp);
     }
 
     ClassFile *super_classe = busca_super_classe(classe);

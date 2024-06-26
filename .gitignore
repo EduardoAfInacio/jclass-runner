@@ -4,3 +4,4 @@
 jclass-runner
 !classpath/java/**
 /Documentacao
+/.vscode

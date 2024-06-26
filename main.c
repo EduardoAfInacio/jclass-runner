@@ -8,6 +8,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "includes/frame.h"
@@ -48,6 +49,14 @@ int main(int argc, char *args[])
     return 1;
   }
 
+  for(int i = 0; i < strlen(caminho_classe); i++)
+  {
+    if (caminho_classe[i] == '.')
+    {
+      caminho_classe[i] = '/';
+    }
+  }
+
   // inicializações
   inicializa_carregador(cp);
   inicializa_instrucoes();
@@ -56,10 +65,9 @@ int main(int argc, char *args[])
   inicializa_lista_arrays();
 
   // Carrega a classe inicial e busca o método main
-  ClassFile *classe = carrega_classe_inicial(caminho_classe);
-  Method *metodo = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
-
-  if (!metodo)
+  ClassFile *classe = carrega_classe(caminho_classe);
+  MethodRef *metodo_ref = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
+  if (!metodo_ref)
   {
     printf("ERRO: declare o método \"public static void main(String[] args)\" em uma das classes.\n");
     return 1;
@@ -72,5 +80,11 @@ int main(int argc, char *args[])
   {
     executa_frame_atual();
   }
-  // Finaliza o programa com sucesso
+
+  push_frame(metodo_ref->classe->constant_pool, metodo_ref->metodo);
+
+  executa_frame_atual();
+
+  free(metodo_ref);
+  return 0;
 }

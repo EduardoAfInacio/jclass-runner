@@ -45,9 +45,46 @@ Campo *campo_por_nome(Objeto *objeto, char *nome)
 {
     for (uint32_t i = 0; i < objeto->campos_length; i++)
     {
-        if (strcmp(nome, objeto->campos[i].nome) == 0)
+        if (!strcmp(nome, objeto->campos[i].nome))
         {
             return &(objeto->campos[i]);
+        }
+    }
+
+    return NULL;
+}
+
+
+/**
+ * @brief Busca um campo estático por nome dentro de uma classe.
+ * 
+ * Percorre todos os campos estáticos da classe dada e compara o nome de cada um com o nome fornecido.
+ * Retorna um ponteiro para o campo se um correspondente for encontrado, ou NULL se nenhum correspondente for encontrado.
+ *
+ * @param classe Ponteiro para a estrutura ClassFile da classe onde buscar o campo.
+ * @param nome Nome do campo estático a ser buscado.
+ * 
+ * @return Campo* Ponteiro para o Campo encontrado, ou NULL se não encontrado.
+ */
+Campo *campo_estatico_por_nome(ClassFile *classe, char *nome)
+{
+    for (uint32_t i = 0; i < classe->campos_length; i++)
+    {
+        if (!strcmp(nome, classe->campos[i].nome))
+        {
+            return &(classe->campos[i]);
+        }
+    }
+
+    return NULL;
+}
+Campo *campo_estatico_por_nome(ClassFile *classe, char *nome)
+{
+    for (uint32_t i = 0; i < classe->campos_length; i++)
+    {
+        if (!strcmp(nome, classe->campos[i].nome))
+        {
+            return &(classe->campos[i]);
         }
     }
 
@@ -67,12 +104,14 @@ Objeto *cria_objeto(ClassFile *classe)
     objeto->classe = classe;
 
     objeto->campos = calloc(sizeof(Campo), classe->fields_count);
+    objeto->campos_length = 0;
 
     for (int i = 0; i < classe->fields_count; i++)
     {
         objeto->campos[i].nome = read_string_cp(classe->constant_pool, classe->fields[i].name_index);
         objeto->campos[i].valor1 = 0;
         objeto->campos[i].valor2 = 0;
+        objeto->campos_length++;
     }
 
     return objeto;
