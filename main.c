@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "includes/frame.h"
 #include "includes/carregador.h"
@@ -31,6 +31,14 @@ int main(int argc, char *args[])
   default:
     printf("Por favor, execute o programa no formato:\n./jclass-runner <caminho/arquivo.class> [-cp <classpath>]\n");
     return 1;
+  }
+
+  for(int i = 0; i < strlen(caminho_classe); i++)
+  {
+    if (caminho_classe[i] == '.')
+    {
+      caminho_classe[i] = '/';
+    }
   }
 
   // inicializações
