@@ -1276,7 +1276,7 @@ void iaload()
 
 void laload()
 {
-    int32_t indice = pop_operando();
+    int32_t indice = pop_operando() * 2;
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
     push_operando(referencia[indice + 1]);
@@ -1295,7 +1295,7 @@ void faload()
 
 void daload()
 {
-    int32_t indice = pop_operando();
+    int32_t indice = pop_operando() * 2;
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
     push_operando(referencia[indice + 1]);
@@ -1612,7 +1612,7 @@ void lastore()
     Frame *frame_atual = get_frame_atual();
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
-    int32_t indice = pop_operando();
+    int32_t indice = pop_operando() * 2;
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
     referencia[indice] = menos_significativos;
@@ -1636,7 +1636,7 @@ void dastore()
     Frame *frame_atual = get_frame_atual();
     int32_t menos_significativos = pop_operando();
     int32_t mais_significativos = pop_operando();
-    int32_t indice = pop_operando();
+    int32_t indice = pop_operando() * 2;
     int32_t *referencia = (int32_t *)(intptr_t)pop_operando();
 
     referencia[indice] = menos_significativos;
