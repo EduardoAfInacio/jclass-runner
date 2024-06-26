@@ -40,7 +40,7 @@ int main(int argc, char *args[])
   inicializa_lista_classes();
   inicializa_lista_arrays();
 
-  ClassFile *classe = carrega_classe_inicial(caminho_classe);
+  ClassFile *classe = carrega_classe(caminho_classe);
   MethodRef *metodo_ref = busca_metodo(classe, "main", "([Ljava/lang/String;)V");
   if (!metodo_ref)
   {

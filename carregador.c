@@ -85,21 +85,6 @@ ClassFile *carrega_classe(char *nome_classe)
     return classe;
 }
 
-ClassFile *carrega_classe_inicial(char *caminho_classe)
-{
-    ClassFile *classe = class_reader(caminho_classe);
-
-    if (!classe)
-    {
-        printf("ERRO: classe %s nao encontrada\n", caminho_classe);
-        exit(1);
-    }
-
-    char *nome_classe = read_nome_classe(classe);
-
-    return carrega_classe(nome_classe);
-}
-
 MethodRef *busca_metodo(ClassFile *classe, char *nome, char *descritor)
 {
     for (int i = 0; i < classe->methods_count; i++)
