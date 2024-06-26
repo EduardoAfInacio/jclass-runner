@@ -4,10 +4,7 @@ jclass-runner: $(patsubst %.c,%.o,$(wildcard *.c))
 %.o: %.c
 	gcc -o build/$@ $< -c -m32 -lm
 
-all: clean build jclass-runner
-
-build:
-	mkdir build
+all: jclass-runner
 
 clean:
 	rm -rf build
