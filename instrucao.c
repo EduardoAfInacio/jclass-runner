@@ -3299,14 +3299,60 @@ void getstatic()
         return;
     }
 
-    printf("ERRO: getstatic não implementada\n");
-    exit(1);
+    ClassFile *classe = carrega_classe(nome_classe);
+    Campo *campo = campo_estatico_por_nome(classe, nome_field);
+
+    if (descritor_field[0] == 'J' || descritor_field[0] == 'D')
+    {
+        push_operando(campo->valor1);
+        push_operando(campo->valor2);
+    }
+    else
+    {
+        push_operando(campo->valor1);
+    }
+
+    free(nome_classe);
+    free(nome_field);
+    free(descritor_field);
+    atualiza_pc();
 }
 
 void putstatic()
 {
-    printf("ERRO: putstatic não implementada\n");
-    exit(1);
+    Frame *frame_atual = get_frame_atual();
+    uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+    uint8_t byte2 = frame_atual->code[frame_atual->pc + 2];
+    uint16_t indice = concat16(byte1, byte2);
+    uint16_t indice_classe = frame_atual->constant_pool[indice - 1].info.Fieldref.class_index;
+    uint16_t indice_nome_tipo = frame_atual->constant_pool[indice - 1].info.Fieldref.name_and_type_index;
+    char *nome_classe = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_classe - 1].info.Class.name_index);
+    char *nome_field = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.name_index);
+    char *descritor_field = read_string_cp(frame_atual->constant_pool, frame_atual->constant_pool[indice_nome_tipo - 1].info.NameAndType.descriptor_index);
+    ClassFile *classe = carrega_classe(nome_classe);
+
+    if (descritor_field[0] == 'J' || descritor_field[0] == 'D')
+    {
+        int32_t valor2 = pop_operando();
+        int32_t valor1 = pop_operando();
+        Campo *campo = campo_estatico_por_nome(classe, nome_field);
+
+        campo->valor1 = valor1;
+        campo->valor2 = valor2;
+    }
+    else
+    {
+        int32_t valor1 = pop_operando();
+        Campo *campo = campo_estatico_por_nome(classe, nome_field);
+
+        campo->valor1 = valor1;
+        campo->valor2 = 0;
+    }
+
+    free(nome_classe);
+    free(nome_field);
+    free(descritor_field);
+    atualiza_pc();
 }
 
 void getfield()

@@ -66,6 +66,17 @@ ClassFile *carrega_classe(char *nome_classe)
         free(clinit_ref);
     }
 
+    classe->campos = calloc(classe->fields_count, sizeof(Campo));
+    classe->campos_length = 0;
+
+    for (uint16_t i = 0; i < classe->fields_count; i++)
+    {
+        classe->campos[i].nome = read_string_cp(classe->constant_pool, classe->fields[i].name_index);
+        classe->campos[i].valor1 = 0;
+        classe->campos[i].valor2 = 0;
+        classe->campos_length++;
+    }
+
     lista_classes.classes = realloc(lista_classes.classes, sizeof(ClassFile *) * lista_classes.length + 1);
     lista_classes.classes[lista_classes.length] = classe;
     lista_classes.length++;

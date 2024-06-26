@@ -24,9 +24,22 @@ Campo *campo_por_nome(Objeto *objeto, char *nome)
 {
     for (uint32_t i = 0; i < objeto->campos_length; i++)
     {
-        if (strcmp(nome, objeto->campos[i].nome) == 0)
+        if (!strcmp(nome, objeto->campos[i].nome))
         {
             return &(objeto->campos[i]);
+        }
+    }
+
+    return NULL;
+}
+
+Campo *campo_estatico_por_nome(ClassFile *classe, char *nome)
+{
+    for (uint32_t i = 0; i < classe->campos_length; i++)
+    {
+        if (!strcmp(nome, classe->campos[i].nome))
+        {
+            return &(classe->campos[i]);
         }
     }
 

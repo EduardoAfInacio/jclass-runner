@@ -10,13 +10,6 @@ typedef struct
     uint32_t length;
 } ListaClasse;
 
-typedef struct
-{
-    char *nome;
-    int32_t valor1;
-    int32_t valor2;
-} Campo;
-
 typedef struct Objeto
 {
     ClassFile *classe;
@@ -44,6 +37,7 @@ extern ListaArray lista_arrays;
 void inicializa_lista_classes();
 void inicializa_lista_arrays();
 Campo *campo_por_nome(Objeto *objeto, char *nome);
+Campo *campo_estatico_por_nome(ClassFile *classe, char *nome);
 Objeto *cria_objeto(ClassFile *classe);
 int32_t *cria_array(uint32_t length, uint32_t bytes, char *tipo);
 

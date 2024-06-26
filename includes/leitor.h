@@ -48,140 +48,170 @@
 #define RET 169
 #define IINC 132
 
-typedef struct {
+typedef struct
+{
+  char *nome;
+  int32_t valor1;
+  int32_t valor2;
+} Campo;
+
+typedef struct
+{
   uint16_t name_index;
   uint32_t length;
-  uint8_t* info;
+  uint8_t *info;
 } Attribute;
 
-typedef struct {
+typedef struct
+{
   uint16_t name_index;
   uint32_t length;
   uint16_t index;
 } ConstantValue;
 
-typedef struct {
+typedef struct
+{
   uint16_t start_pc;
   uint16_t end_pc;
   uint16_t catch_type;
 } ExceptionTable;
 
-typedef struct {
+typedef struct
+{
   uint16_t name_index;
   uint32_t length;
   uint16_t max_stack;
   uint16_t max_locals;
   uint32_t code_length;
-  uint8_t* code;
+  uint8_t *code;
   uint16_t exception_table_length;
-  ExceptionTable* exception_table;
+  ExceptionTable *exception_table;
   uint16_t attributes_count;
-  Attribute* attributes;
+  Attribute *attributes;
 } CodeAttribute;
 
-typedef struct {
+typedef struct
+{
   uint16_t name_index;
   uint32_t length;
   uint16_t number_of_exceptions;
-  uint16_t* exception_index_table;
+  uint16_t *exception_index_table;
 } ExceptionAttribute;
 
-typedef struct {
+typedef struct
+{
   uint16_t access_flags;
   uint16_t name_index;
   uint16_t descriptor_index;
   uint16_t attributes_count;
-  ConstantValue* attributes;
+  ConstantValue *attributes;
 } Field;
 
-typedef struct {
+typedef struct
+{
   uint16_t access_flags;
   uint16_t name_index;
   uint16_t descriptor_index;
   uint16_t attributes_count;
-  CodeAttribute* code_attribute;
-  ExceptionAttribute* exception_attribute;
+  CodeAttribute *code_attribute;
+  ExceptionAttribute *exception_attribute;
 } Method;
 
-typedef struct {
+typedef struct
+{
   uint8_t tag;
-  union {
-    struct {
+  union
+  {
+    struct
+    {
       uint16_t name_index;
     } Class;
-    struct {
+    struct
+    {
       uint16_t class_index;
       uint16_t name_and_type_index;
     } Fieldref;
-    struct {
+    struct
+    {
       uint16_t name_index;
       uint16_t descriptor_index;
     } NameAndType;
-    struct {
+    struct
+    {
       uint16_t length;
-      uint8_t* bytes;
+      uint8_t *bytes;
     } Utf8;
-    struct {
+    struct
+    {
       uint16_t class_index;
       uint16_t name_and_type_index;
     } Methodref;
-    struct {
+    struct
+    {
       uint16_t class_index;
       uint16_t name_and_type_index;
     } InterfaceMethodref;
-    struct {
+    struct
+    {
       uint16_t string_index;
     } String;
-    struct {
+    struct
+    {
       uint32_t bytes;
     } Integer;
-    struct {
+    struct
+    {
       uint32_t bytes;
     } Float;
-    struct {
+    struct
+    {
       uint32_t high_bytes;
       uint32_t low_bytes;
     } Long;
-    struct {
+    struct
+    {
       uint32_t high_bytes;
       uint32_t low_bytes;
     } Double;
   } info;
 } ConstantPool;
 
-typedef struct ClassFile {
+typedef struct ClassFile
+{
   uint32_t magic;
   uint16_t minor_version;
   uint16_t major_version;
   uint16_t constant_pool_count;
-  ConstantPool* constant_pool;
+  ConstantPool *constant_pool;
   uint16_t access_flags;
   uint16_t this_class;
   uint16_t super_class;
   uint16_t interfaces_count;
-  uint16_t* interfaces;
+  uint16_t *interfaces;
   uint16_t fields_count;
-  Field* fields;
+  Field *fields;
   uint16_t methods_count;
-  Method* methods;
+  Method *methods;
   uint16_t attributes_count;
-  Attribute* attributes;
+  Attribute *attributes;
+  Campo *campos;
+  uint32_t campos_length;
 } ClassFile;
 
-void general_info(ClassFile* cf, FILE* file);
-void constant_pool(ClassFile* cf, FILE* file);
-void methodInfo(ClassFile* cf, FILE* file, uint16_t methods_count);
-void attributeInfo(ClassFile* cf, FILE* file, uint16_t attributes_count);
-void secondGeneralInfo(ClassFile* cf, FILE* file);
-void print_prompt(ClassFile* cf);
-void read_exc(ExceptionAttribute** exc_atrb, uint16_t name_ind,
-              uint32_t att_len, FILE* file);
-void read_code(CodeAttribute** cd_atrb, uint16_t name_ind, uint32_t att_len,
-               FILE* file);
-void save_instructions(CodeAttribute** cd_atrb, FILE* file);
-ClassFile* class_reader(char* class_name);
-static inline uint8_t read_one_byte(FILE* fp);
-static inline uint16_t read_two_bytes(FILE* fp);
-static inline uint32_t read_four_bytes(FILE* fp);
+void general_info(ClassFile *cf, FILE *file);
+void constant_pool(ClassFile *cf, FILE *file);
+void methodInfo(ClassFile *cf, FILE *file, uint16_t methods_count);
+void attributeInfo(ClassFile *cf, FILE *file, uint16_t attributes_count);
+void secondGeneralInfo(ClassFile *cf, FILE *file);
+void print_prompt(ClassFile *cf);
+void read_exc(ExceptionAttribute **exc_atrb, uint16_t name_ind,
+              uint32_t att_len, FILE *file);
+void read_code(CodeAttribute **cd_atrb, uint16_t name_ind, uint32_t att_len,
+               FILE *file);
+void save_instructions(CodeAttribute **cd_atrb, FILE *file);
+ClassFile *class_reader(char *class_name);
+static inline uint8_t read_one_byte(FILE *fp);
+static inline uint16_t read_two_bytes(FILE *fp);
+static inline uint32_t read_four_bytes(FILE *fp);
 
 #endif
