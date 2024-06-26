@@ -10,6 +10,7 @@
 
 char *string_buffer;
 Instrucao instrucoes[NUM_INSTRUCOES];
+bool wide_instruction = false;
 
 void inicializa_instrucoes()
 {
@@ -1039,55 +1040,114 @@ void ldc2_w()
 void iload()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-
-    push_operando(frame_atual->fields[indice]);
-    atualiza_pc();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        push_operando(frame_atual->fields[indice]);
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        push_operando(frame_atual->fields[indice]);
+        atualiza_pc();
+    }
 }
 
 void lload()
 {
     Frame *frame_atual = get_frame_atual();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        int32_t menos_significativos = frame_atual->fields[indice];
+        int32_t mais_significativos = frame_atual->fields[indice + 1];
 
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-    int32_t menos_significativos = frame_atual->fields[indice];
-    int32_t mais_significativos = frame_atual->fields[indice + 1];
+        push_operando(mais_significativos);
+        push_operando(menos_significativos);
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        int32_t menos_significativos = frame_atual->fields[indice];
+        int32_t mais_significativos = frame_atual->fields[indice + 1];
 
-    push_operando(mais_significativos);
-    push_operando(menos_significativos);
+        push_operando(mais_significativos);
+        push_operando(menos_significativos);
 
-    atualiza_pc();
+        atualiza_pc();
+    }
 }
 
 void fload()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[get_frame_atual()->pc + 1];
-
-    push_operando(frame_atual->fields[indice]);
-    atualiza_pc();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        push_operando(frame_atual->fields[indice]);
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        push_operando(frame_atual->fields[indice]);
+        atualiza_pc();
+    }
 }
 
 void dload()
 {
     Frame *frame_atual = get_frame_atual();
-    int32_t indice = frame_atual->code[frame_atual->pc + 1];
-    int32_t menos_significativos = frame_atual->fields[indice];
-    int32_t mais_significativos = frame_atual->fields[indice + 1];
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        int32_t menos_significativos = frame_atual->fields[indice];
+        int32_t mais_significativos = frame_atual->fields[indice + 1];
 
-    push_operando(mais_significativos);
-    push_operando(menos_significativos);
+        push_operando(mais_significativos);
+        push_operando(menos_significativos);
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        int32_t menos_significativos = frame_atual->fields[indice];
+        int32_t mais_significativos = frame_atual->fields[indice + 1];
 
-    atualiza_pc();
+        push_operando(mais_significativos);
+        push_operando(menos_significativos);
+
+        atualiza_pc();
+    }
 }
 
 void aload()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-
-    push_operando(frame_atual->fields[indice]);
-    atualiza_pc();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        push_operando(frame_atual->fields[indice]);
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        push_operando(frame_atual->fields[indice]);
+        atualiza_pc();
+    }
 }
 
 void iload_0()
@@ -1344,56 +1404,116 @@ void saload()
 void istore()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-
-    frame_atual->fields[indice] = pop_operando();
-    atualiza_pc();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        frame_atual->fields[indice] = pop_operando();
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        frame_atual->fields[indice] = pop_operando();
+        atualiza_pc();
+    }
 }
 
 void lstore()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-    int32_t menos_significativos = pop_operando();
-    int32_t mais_significativos = pop_operando();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        int32_t menos_significativos = pop_operando();
+        int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[indice] = menos_significativos;
-    frame_atual->fields[indice + 1] = mais_significativos;
+        frame_atual->fields[indice] = menos_significativos;
+        frame_atual->fields[indice + 1] = mais_significativos;
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        Frame *frame_atual = get_frame_atual();
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        int32_t menos_significativos = pop_operando();
+        int32_t mais_significativos = pop_operando();
 
-    atualiza_pc();
+        frame_atual->fields[indice] = menos_significativos;
+        frame_atual->fields[indice + 1] = mais_significativos;
+
+        atualiza_pc();
+    }
 }
 
 void fstore()
 {
-
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-
-    frame_atual->fields[indice] = pop_operando();
-    atualiza_pc();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        frame_atual->fields[indice] = pop_operando();
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        frame_atual->fields[indice] = pop_operando();
+        atualiza_pc();
+    }
 }
 
 void dstore()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-    int32_t menos_significativos = pop_operando();
-    int32_t mais_significativos = pop_operando();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        int32_t menos_significativos = pop_operando();
+        int32_t mais_significativos = pop_operando();
 
-    frame_atual->fields[indice] = menos_significativos;
-    frame_atual->fields[indice + 1] = mais_significativos;
+        frame_atual->fields[indice] = menos_significativos;
+        frame_atual->fields[indice + 1] = mais_significativos;
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        Frame *frame_atual = get_frame_atual();
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        int32_t menos_significativos = pop_operando();
+        int32_t mais_significativos = pop_operando();
 
-    atualiza_pc();
+        frame_atual->fields[indice] = menos_significativos;
+        frame_atual->fields[indice + 1] = mais_significativos;
+
+        atualiza_pc();
+    }
 }
 
 void astore()
 {
-
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-
-    frame_atual->fields[indice] = pop_operando();
-    atualiza_pc();
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        frame_atual->fields[indice] = pop_operando();
+        frame_atual->pc += 4;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        frame_atual->fields[indice] = pop_operando();
+        atualiza_pc();
+    }
 }
 
 void istore_0()
@@ -2400,11 +2520,28 @@ void lxor()
 void iinc()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-    int8_t constante = frame_atual->code[frame_atual->pc + 2];
+    
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 1];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 1];
+        uint16_t indice = concat16(byte1, byte2);
+        uint8_t byte3 = frame_atual->code[frame_atual->pc + 1];
+        uint8_t byte4 = frame_atual->code[frame_atual->pc + 1];
+        uint16_t constante = concat16(byte3, byte4);
 
-    frame_atual->fields[indice] += constante;
-    atualiza_pc();
+
+        frame_atual->fields[indice] += constante;
+        frame_atual->pc += 6;
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        int8_t constante = frame_atual->code[frame_atual->pc + 2];
+
+        frame_atual->fields[indice] += constante;
+        atualiza_pc();
+    }
 }
 
 void i2l()
@@ -3057,8 +3194,18 @@ void jsr()
 void ret()
 {
     Frame *frame_atual = get_frame_atual();
-    uint8_t indice = frame_atual->code[frame_atual->pc + 1];
-    frame_atual->pc = frame_atual->fields[indice];
+    if (wide_instruction)
+    {
+        uint8_t byte1 = frame_atual->code[frame_atual->pc + 2];
+        uint8_t byte2 = frame_atual->code[frame_atual->pc + 3];
+        uint16_t indice = concat16(byte1, byte2);
+        frame_atual->pc = frame_atual->fields[indice];
+    }
+    else
+    {
+        uint8_t indice = frame_atual->code[frame_atual->pc + 1];
+        frame_atual->pc = frame_atual->fields[indice];
+    }
 }
 
 void tableswitch()
@@ -3932,6 +4079,10 @@ void monitorexit()
 
 void wide()
 {
+    Frame *frame_atual = get_frame_atual();
+    wide_instruction = true;
+    instrucoes[frame_atual->pc + 1].exec();
+    wide_instruction = false;
 }
 
 void multianewarray()
