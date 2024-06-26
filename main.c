@@ -67,6 +67,5 @@ int main(int argc, char *args[])
 
   executa_frame_atual();
 
-  free(metodo_ref);
   return 0;
 }

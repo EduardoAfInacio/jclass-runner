@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-char *string_buffer;
+char *string_buffer = NULL;
 Instrucao instrucoes[NUM_INSTRUCOES];
 bool wide_instruction = false;
 
@@ -3438,9 +3438,6 @@ void getstatic()
 
     if (!strcmp(nome_classe, "java/lang/System") && !strcmp(nome_field, "out") && !strcmp(descritor_field, "Ljava/io/PrintStream;"))
     {
-        free(nome_classe);
-        free(nome_field);
-        free(descritor_field);
         push_operando(0);
         atualiza_pc();
         return;
@@ -3459,9 +3456,6 @@ void getstatic()
         push_operando(campo->valor1);
     }
 
-    free(nome_classe);
-    free(nome_field);
-    free(descritor_field);
     atualiza_pc();
 }
 
@@ -3496,9 +3490,6 @@ void putstatic()
         campo->valor2 = 0;
     }
 
-    free(nome_classe);
-    free(nome_field);
-    free(descritor_field);
     atualiza_pc();
 }
 
@@ -3528,8 +3519,6 @@ void getfield()
         push_operando(campo->valor1);
     }
 
-    free(nome);
-    free(tipo);
     atualiza_pc();
 }
 
@@ -3565,8 +3554,6 @@ void putfield()
         campo->valor2 = 0;
     }
 
-    free(nome);
-    free(tipo);
     atualiza_pc();
 }
 
@@ -3637,9 +3624,6 @@ void invokevirtual()
             exit(1);
         }
 
-        free(nome_classe);
-        free(nome_metodo);
-        free(descritor_metodo);
         pop_operando();
         atualiza_pc();
         return;
@@ -3664,13 +3648,8 @@ void invokevirtual()
                     string_buffer = realloc(string_buffer, (strlen(temp) + strlen(string)) * sizeof(char));
                     strcpy(string_buffer, string);
                     strcat(string_buffer, temp);
-                    free(temp);
                 }
 
-                free(nome_classe);
-                free(nome_metodo);
-                free(descritor_metodo);
-                free(string);
                 atualiza_pc();
                 return;
             }
@@ -3687,10 +3666,7 @@ void invokevirtual()
             char *temp = calloc(strlen(string_buffer), sizeof(char));
             strcpy(temp, string_buffer);
             push_operando((intptr_t)temp);
-            free(nome_classe);
-            free(nome_metodo);
-            free(descritor_metodo);
-            free(string_buffer);
+            string_buffer = NULL;
             atualiza_pc();
             return;
         }
@@ -3723,11 +3699,6 @@ void invokevirtual()
 
     executa_frame_atual();
 
-    free(fields);
-    free(metodo_ref);
-    free(nome_classe);
-    free(nome_metodo);
-    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3745,7 +3716,6 @@ void invokespecial()
     if (!strcmp(nome_classe, "java/lang/StringBuffer"))
     {
         pop_operando();
-        free(nome_classe);
         atualiza_pc();
         return;
     }
@@ -3780,11 +3750,6 @@ void invokespecial()
 
     executa_frame_atual();
 
-    free(fields);
-    free(metodo_ref);
-    free(nome_classe);
-    free(nome_metodo);
-    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3834,11 +3799,6 @@ void invokestatic()
 
     executa_frame_atual();
 
-    free(fields);
-    free(metodo_ref);
-    free(nome_classe);
-    free(nome_metodo);
-    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3892,12 +3852,6 @@ void invokeinterface()
 
     executa_frame_atual();
 
-    free(fields);
-    free(metodo_interface_ref);
-    free(metodo_ref);
-    free(nome_classe);
-    free(nome_metodo);
-    free(descritor_metodo);
     atualiza_pc();
     return;
 }
@@ -3913,7 +3867,6 @@ void jvm_new()
     if (!strcmp(nome_classe, "java/lang/StringBuffer"))
     {
         push_operando(0);
-        free(nome_classe);
         atualiza_pc();
         return;
     }
@@ -3927,7 +3880,6 @@ void jvm_new()
     }
 
     push_operando((intptr_t)objeto);
-    free(nome_classe);
     atualiza_pc();
 }
 
@@ -4062,8 +4014,6 @@ void instanceof ()
         push_operando(0);
     }
 
-    free(nome_classe_objeto);
-    free(nome_classe_cp);
     atualiza_pc();
 }
 
